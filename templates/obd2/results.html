@@ -1,0 +1,319 @@
+{% extends "layout.html" %}
+
+{% block title %}OBD2 Diagnostic Results{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-11">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="mb-0"><i class="fas fa-clipboard-list"></i> Diagnostic Results</h1>
+                    <span class="badge bg-light text-dark">Session #{{ session.id }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h3>Vehicle Information</h3>
+                                <span class="badge {% if session.success %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if session.success %}Success{% else %}Failed{% endif %}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width: 30%">Make:</th>
+                                            <td>{{ vehicle.make }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Model:</th>
+                                            <td>{{ vehicle.model }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Year:</th>
+                                            <td>{{ vehicle.year }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Mileage:</th>
+                                            <td>{{ vehicle.mileage|default('N/A', true) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>VIN:</th>
+                                            <td>{{ vehicle.vin|default('Not detected', true) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>ECU:</th>
+                                            <td>{{ vehicle.ecu_name|default('Not detected', true) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Protocol:</th>
+                                            <td>{{ vehicle.protocol|default('Unknown', true) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Scan Time:</th>
+                                            <td>{{ session.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ url_for('obd2_dashboard') }}" class="btn btn-secondary me-2">
+                                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                            </a>
+                            <a href="#" class="btn btn-info me-2" onclick="window.print(); return false;">
+                                <i class="fas fa-print me-1"></i> Print Report
+                            </a>
+                            <a href="#" class="btn btn-success" id="download-report">
+                                <i class="fas fa-download me-1"></i> Download PDF
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>
+                                    <i class="fas fa-exclamation-triangle me-2"></i> Diagnostic Trouble Codes
+                                    <span class="badge {% if dtcs|length == 0 %}bg-success{% elif dtcs|length > 3 %}bg-danger{% else %}bg-warning{% endif %} ms-2">
+                                        {{ dtcs|length }}
+                                    </span>
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                {% if dtcs|length == 0 %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i> No trouble codes detected.
+                                </div>
+                                {% else %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Code</th>
+                                                <th>Description</th>
+                                                <th>Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for dtc in dtcs %}
+                                            <tr>
+                                                <td>{{ dtc.code }}</td>
+                                                <td>{{ dtc.description|default('Unknown code', true) }}</td>
+                                                <td>
+                                                    <span class="badge {% if dtc.type == 'pending' %}bg-warning{% elif dtc.type == 'permanent' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                        {{ dtc.type|capitalize }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if dtcs|length > 0 and dtc_analysis %}
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-brain me-2"></i> AI-Enhanced Diagnostic Analysis</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert {% if dtc_analysis.severity == 'critical' %}alert-danger{% elif dtc_analysis.severity == 'high' %}alert-warning{% elif dtc_analysis.severity == 'medium' %}alert-info{% else %}alert-success{% endif %}">
+                                    <h4>
+                                        <i class="fas {% if dtc_analysis.severity == 'critical' %}fa-exclamation-circle{% elif dtc_analysis.severity == 'high' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
+                                        Overall Assessment: {{ dtc_analysis.severity|capitalize }}
+                                    </h4>
+                                    <p class="lead">{{ dtc_analysis.summary }}</p>
+                                </div>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-6">
+                                        <h4>Likely Causes</h4>
+                                        <ul class="list-group mb-4">
+                                            {% for cause in dtc_analysis.likely_causes %}
+                                            <li class="list-group-item">{{ cause }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h4>Recommended Tests</h4>
+                                        <ul class="list-group mb-4">
+                                            {% for test in dtc_analysis.recommended_tests %}
+                                            <li class="list-group-item">{{ test }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                {% if dtc_analysis.safety_concerns %}
+                                <div class="alert alert-danger mt-3">
+                                    <h4><i class="fas fa-exclamation-triangle me-2"></i> Safety Concerns</h4>
+                                    <p>{{ dtc_analysis.safety_concerns }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-tools me-2"></i> DIY Repair Options</h3>
+                            </div>
+                            <div class="card-body">
+                                {% if dtc_analysis.repair_options and dtc_analysis.repair_options.diy %}
+                                <div class="accordion" id="diyRepairsAccordion">
+                                    {% for repair in dtc_analysis.repair_options.diy %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="diy-heading-{{ loop.index }}">
+                                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#diy-collapse-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="diy-collapse-{{ loop.index }}">
+                                                {{ repair.name }}
+                                                <span class="badge bg-info ms-auto me-2">Difficulty: {{ repair.difficulty }}/5</span>
+                                                <span class="badge bg-secondary">Est. Cost: {{ repair.cost }}</span>
+                                            </button>
+                                        </h2>
+                                        <div id="diy-collapse-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="diy-heading-{{ loop.index }}" data-bs-parent="#diyRepairsAccordion">
+                                            <div class="accordion-body">
+                                                <p>{{ repair.description }}</p>
+                                                
+                                                <h5>Tools Required</h5>
+                                                <ul>
+                                                    {% for tool in repair.tools_required %}
+                                                    <li>{{ tool }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                                
+                                                <h5>Step-by-Step Procedure</h5>
+                                                <ol class="list-group list-group-numbered">
+                                                    {% for step in repair.steps %}
+                                                    <li class="list-group-item">{{ step }}</li>
+                                                    {% endfor %}
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> No DIY repair options available for these trouble codes. Professional repair is recommended.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-user-md me-2"></i> Professional Repair Recommendations</h3>
+                            </div>
+                            <div class="card-body">
+                                {% if dtc_analysis.repair_options and dtc_analysis.repair_options.professional %}
+                                <div class="accordion" id="proRepairsAccordion">
+                                    {% for repair in dtc_analysis.repair_options.professional %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="pro-heading-{{ loop.index }}">
+                                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#pro-collapse-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="pro-collapse-{{ loop.index }}">
+                                                {{ repair.name }}
+                                                <span class="badge bg-secondary ms-auto me-2">Est. Cost: {{ repair.cost }}</span>
+                                            </button>
+                                        </h2>
+                                        <div id="pro-collapse-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="pro-heading-{{ loop.index }}" data-bs-parent="#proRepairsAccordion">
+                                            <div class="accordion-body">
+                                                <p>{{ repair.description }}</p>
+                                                
+                                                {% if repair.specialist_type %}
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i> This repair should be performed by a <strong>{{ repair.specialist_type }}</strong>.
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if repair.notes %}
+                                                <h5>Additional Notes</h5>
+                                                <p>{{ repair.notes }}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> No professional repair recommendations available.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if sensor_readings|length > 0 %}
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-tachometer-alt me-2"></i> Sensor Readings</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Sensor</th>
+                                                <th>Value</th>
+                                                <th>Unit</th>
+                                                <th>PID</th>
+                                                <th>Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for reading in sensor_readings %}
+                                            <tr>
+                                                <td>{{ reading.name }}</td>
+                                                <td>{{ reading.value }}</td>
+                                                <td>{{ reading.unit }}</td>
+                                                <td><code>{{ reading.pid }}</code></td>
+                                                <td>{{ reading.timestamp.strftime('%H:%M:%S') }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Download PDF (this would be implemented with a proper PDF generation library)
+        const downloadBtn = document.getElementById('download-report');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('PDF download feature would be implemented in production version.');
+            });
+        }
+    });
+</script>
+{% endblock %}

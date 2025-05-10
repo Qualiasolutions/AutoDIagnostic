@@ -3,38 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Automotive Diagnostic Assistant{% endblock %}</title>
+    <title>{% block title %}Automotive Diagnostic AI Assistant{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <style>
+        /* Custom styling for automotive theme */
+        .navbar-brand img {
+            height: 40px;
+            margin-right: 10px;
+        }
+        
+        .card {
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            font-weight: 600;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        
+        /* Styling for the OBD2 dashboard */
+        .sensor-value {
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        
+        /* Custom footer */
+        .footer {
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+        
+        /* Custom styling for the mobile camera interface */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .camera-feed {
+            width: 100%;
+            height: auto;
+            display: block;
+            background-color: #333;
+            border-radius: 8px;
+        }
+        
+        .camera-controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        /* Recording button animation */
+        .recording-btn {
+            position: relative;
+        }
+        
+        .recording-btn.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background-color: red;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .camera-container {
+                max-width: 100%;
+            }
+        }
+    </style>
     
     {% block head %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-car-mechanic"></i> Automotive Diagnostic Assistant
+                <i class="fas fa-car-mechanic fa-2x me-2"></i>
+                Auto Diagnostic AI
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a>
+                        <a class="nav-link" href="/"><i class="fas fa-home me-1"></i> Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">
-                            <i class="fas fa-question-circle"></i> Help
-                        </a>
+                        <a class="nav-link" href="{{ url_for('obd2_index') }}"><i class="fas fa-plug me-1"></i> OBD2 Diagnostics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('diagnostic') }}"><i class="fas fa-camera me-1"></i> Visual Diagnostics</a>
                     </li>
                 </ul>
             </div>
@@ -42,99 +142,30 @@
     </nav>
     
     <!-- Main Content -->
-    <div class="container mt-4 mb-5">
+    <main class="container">
         {% block content %}{% endblock %}
-    </div>
+    </main>
     
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-dark">
-        <div class="container text-center">
-            <span class="text-muted">© 2023 Automotive Diagnostic Assistant | <a href="#" data-bs-toggle="modal" data-bs-target="#disclaimerModal">Disclaimer</a></span>
+    <footer class="footer bg-dark text-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Automotive Diagnostic AI Assistant</h5>
+                    <p>Advanced vehicle diagnostics powered by artificial intelligence</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 Auto Diagnostic AI</p>
+                    <p class="text-muted small">Version 1.0.0</p>
+                </div>
+            </div>
         </div>
     </footer>
     
-    <!-- Help Modal -->
-    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="helpModalLabel">How to Use the Automotive Diagnostic Assistant</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <h5>Getting Started</h5>
-                    <p>This application helps diagnose car problems using your smartphone's camera and microphone. Follow these steps:</p>
-                    
-                    <ol>
-                        <li><strong>Enter Vehicle Information</strong> - Provide your car's make, model, year, and mileage.</li>
-                        <li><strong>Use Camera Mode</strong> - Point your camera at the problem area (warning lights, fluid leaks, visible damage).</li>
-                        <li><strong>Use Voice Mode</strong> - Describe the symptoms you're experiencing (strange noises, performance issues, etc.).</li>
-                        <li><strong>Review Results</strong> - The AI will analyze the data and provide a diagnosis with possible solutions.</li>
-                    </ol>
-                    
-                    <h5>Tips for Best Results</h5>
-                    <ul>
-                        <li>When using the camera, ensure good lighting and a clear view of the problem area.</li>
-                        <li>For dashboard warning lights, take a clear photo of the illuminated light.</li>
-                        <li>When describing symptoms, be specific about when they occur (e.g., "grinding noise when braking" rather than just "noise").</li>
-                        <li>Include details about when the problem started and any changes in driving conditions.</li>
-                    </ul>
-                    
-                    <h5>Understanding Results</h5>
-                    <p>The diagnosis will include:</p>
-                    <ul>
-                        <li>Possible issues with confidence levels</li>
-                        <li>Severity ratings (low, medium, high, critical)</li>
-                        <li>DIY repair instructions when appropriate</li>
-                        <li>Professional repair recommendations</li>
-                        <li>Important safety warnings</li>
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Disclaimer Modal -->
-    <div class="modal fade" id="disclaimerModal" tabindex="-1" aria-labelledby="disclaimerModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="disclaimerModalLabel">Important Disclaimer</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <h5><i class="fas fa-exclamation-triangle"></i> Safety First</h5>
-                        <p>This Automotive Diagnostic Assistant is designed to provide general guidance and is not a substitute for professional mechanical advice or service.</p>
-                        
-                        <h6>Please be aware:</h6>
-                        <ul>
-                            <li>The diagnoses provided are based on limited information and may not be complete or accurate in all situations.</li>
-                            <li>Always prioritize safety when dealing with vehicle issues.</li>
-                            <li>If you're experiencing a serious issue (smoke, fire, loss of control, etc.), stop using the vehicle immediately and seek professional help.</li>
-                            <li>Follow all safety precautions when attempting DIY repairs.</li>
-                            <li>For critical systems like brakes, steering, airbags, or fuel systems, professional service is strongly recommended.</li>
-                        </ul>
-                        
-                        <p>By using this application, you acknowledge that you are solely responsible for your safety and any actions taken based on the information provided.</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
     <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Main JavaScript -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
+    <!-- Custom JavaScript -->
     {% block scripts %}{% endblock %}
 </body>
 </html>

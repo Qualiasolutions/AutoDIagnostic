@@ -1,141 +1,123 @@
 {% extends "layout.html" %}
 
-{% block title %}Automotive Diagnostic Assistant{% endblock %}
+{% block title %}Automotive Diagnostic AI Assistant{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h1 class="mb-0"><i class="fas fa-car"></i> Automotive Diagnostic Assistant</h1>
+                <h1 class="mb-0"><i class="fas fa-car"></i> Automotive Diagnostic AI Assistant</h1>
             </div>
             <div class="card-body">
-                <div class="text-center mb-4">
-                    <h2>Diagnose Your Vehicle Issues</h2>
+                <div class="text-center mb-5">
+                    <h2>Your Intelligent Diagnostics Partner</h2>
                     <p class="lead">
-                        Get real-time diagnosis and repair guidance for your vehicle problems using your
-                        smartphone's camera and microphone.
+                        Get professional-level diagnostics and repair recommendations for your vehicle using cutting-edge 
+                        artificial intelligence technology.
                     </p>
                 </div>
                 
-                <div class="row mb-4">
-                    <div class="col-md-4 text-center">
+                <div class="row mb-5">
+                    <div class="col-md-6">
                         <div class="card h-100">
+                            <div class="card-header bg-info text-white">
+                                <h3 class="mb-0"><i class="fas fa-plug me-2"></i> OBD2 Diagnostics</h3>
+                            </div>
                             <div class="card-body">
-                                <i class="fas fa-car-alt fa-3x text-primary mb-3"></i>
-                                <h4>Vehicle Information</h4>
-                                <p>Input your vehicle details for accurate diagnosis</p>
+                                <p>Connect directly to your vehicle's OBD2 port using a USB cable to read trouble codes and sensor data.</p>
+                                <ul>
+                                    <li>Read and analyze diagnostic trouble codes (DTCs)</li>
+                                    <li>Monitor real-time sensor data</li>
+                                    <li>Get AI-powered repair recommendations</li>
+                                    <li>Access comprehensive repair guides</li>
+                                </ul>
+                                <div class="text-center mt-auto">
+                                    <a href="{{ url_for('obd2_index') }}" class="btn btn-primary btn-lg px-4">
+                                        <i class="fas fa-tools me-2"></i> Start OBD2 Diagnostics
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 text-center">
+                    <div class="col-md-6">
                         <div class="card h-100">
-                            <div class="card-body">
-                                <i class="fas fa-camera fa-3x text-primary mb-3"></i>
-                                <h4>Visual Analysis</h4>
-                                <p>Point your camera at the issue for visual identification</p>
+                            <div class="card-header bg-success text-white">
+                                <h3 class="mb-0"><i class="fas fa-camera me-2"></i> Visual & Voice Diagnostics</h3>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <div class="card h-100">
                             <div class="card-body">
-                                <i class="fas fa-microphone fa-3x text-primary mb-3"></i>
-                                <h4>Symptom Description</h4>
-                                <p>Describe the symptoms you're experiencing</p>
+                                <p>Use your camera and microphone to diagnose problems without specialized equipment.</p>
+                                <ul>
+                                    <li>Take photos of vehicle components</li>
+                                    <li>Record engine sounds and noises</li>
+                                    <li>Get visual analysis of problems</li>
+                                    <li>Identify issues using acoustic analysis</li>
+                                </ul>
+                                <div class="text-center mt-auto">
+                                    <a href="{{ url_for('diagnostic') }}" class="btn btn-primary btn-lg px-4">
+                                        <i class="fas fa-microphone-alt me-2"></i> Start Visual Diagnostics
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <form id="vehicle-form" action="/vehicle-info" method="post" class="needs-validation" novalidate>
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h3>Vehicle Information</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="make" class="form-label">Make <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="make" name="make" required placeholder="e.g., Toyota, Ford, Honda">
-                                    <div class="invalid-feedback">
-                                        Please enter your vehicle's make.
+                <div class="row mb-5">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="mb-0"><i class="fas fa-brain me-2"></i> Powered by Advanced AI</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <p>Our diagnostic system uses state-of-the-art artificial intelligence to analyze:</p>
+                                        <ul>
+                                            <li>Vehicle diagnostic trouble codes</li>
+                                            <li>Sensor data and performance metrics</li>
+                                            <li>Visual symptoms from images</li>
+                                            <li>Acoustic signatures from engine noises</li>
+                                        </ul>
+                                        <p>The AI cross-references this data with a vast database of vehicle problems and solutions to provide accurate diagnostics and repair recommendations.</p>
+                                    </div>
+                                    <div class="col-md-6 text-center">
+                                        <img src="https://cdn.pixabay.com/photo/2018/09/18/11/19/artificial-intelligence-3685928_960_720.png" alt="AI Diagnostics" class="img-fluid rounded" style="max-width: 300px;">
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="model" class="form-label">Model <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="model" name="model" required placeholder="e.g., Camry, F-150, Civic">
-                                    <div class="invalid-feedback">
-                                        Please enter your vehicle's model.
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="year" name="year" required min="1900" max="2099" placeholder="e.g., 2015">
-                                    <div class="invalid-feedback">
-                                        Please enter a valid year (1900-2099).
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="mileage" class="form-label">Mileage</label>
-                                    <input type="number" class="form-control" id="mileage" name="mileage" min="0" placeholder="e.g., 75000">
-                                    <div class="invalid-feedback">
-                                        Please enter a valid mileage.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg px-5">
-                            <i class="fas fa-wrench me-2"></i> Start Diagnosis
-                        </button>
-                    </div>
-                </form>
-                
-                <div class="card mt-5">
-                    <div class="card-header">
-                        <h3>How It Works</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3 text-center mb-3">
-                                <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
-                                    <h3 class="mb-0">1</h3>
-                                </div>
-                                <h5 class="mt-2">Enter Vehicle Details</h5>
-                                <p>Provide your vehicle's make, model, and year</p>
-                            </div>
-                            <div class="col-md-3 text-center mb-3">
-                                <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
-                                    <h3 class="mb-0">2</h3>
-                                </div>
-                                <h5 class="mt-2">Show the Problem</h5>
-                                <p>Use your camera to capture the issue</p>
-                            </div>
-                            <div class="col-md-3 text-center mb-3">
-                                <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
-                                    <h3 class="mb-0">3</h3>
-                                </div>
-                                <h5 class="mt-2">Describe Symptoms</h5>
-                                <p>Explain what you're experiencing</p>
-                            </div>
-                            <div class="col-md-3 text-center mb-3">
-                                <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
-                                    <h3 class="mb-0">4</h3>
-                                </div>
-                                <h5 class="mt-2">Get Solutions</h5>
-                                <p>Receive diagnosis and repair options</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="alert alert-info mt-4">
-                    <i class="fas fa-info-circle me-2"></i> This application uses your smartphone's camera and microphone to help diagnose vehicle problems. Your privacy is important - no recordings are saved or shared with third parties.
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <h4>Accurate Diagnosis</h4>
+                                <p>Get precise diagnosis of vehicle issues with our multi-source analysis approach.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-tools fa-3x text-primary mb-3"></i>
+                                <h4>Detailed Repair Guides</h4>
+                                <p>Follow step-by-step repair instructions tailored to your specific vehicle and issues.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-dollar-sign fa-3x text-info mb-3"></i>
+                                <h4>Save Money</h4>
+                                <p>Avoid unnecessary repairs and parts replacement with targeted diagnostics.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
