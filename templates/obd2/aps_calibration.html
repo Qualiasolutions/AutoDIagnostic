@@ -1,0 +1,512 @@
+{% extends "layout.html" %}
+
+{% block title %}APS Calibration Tool{% endblock %}
+
+{% block head %}
+<style>
+    .calibration-container {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .value-display {
+        background-color: #2c3542;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        font-family: monospace;
+    }
+    .sensor-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .slider-container {
+        margin: 2rem 0;
+    }
+    .danger-zone {
+        background-color: rgba(220, 53, 69, 0.1);
+        border: 1px solid rgba(220, 53, 69, 0.5);
+        border-radius: 6px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    .sensor-status {
+        padding: 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    .status-normal {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    .status-warning {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+    .status-danger {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+    .gauge-container {
+        width: 100%;
+        height: 150px;
+        margin-bottom: 1.5rem;
+    }
+    .action-buttons {
+        margin-top: 2rem;
+    }
+    .reading-history {
+        height: 200px;
+        overflow-y: auto;
+        background-color: #2c3542;
+        border-radius: 6px;
+        padding: 1rem;
+    }
+    .history-item {
+        padding: 0.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .confirmation-modal .modal-content {
+        background-color: #2c3542;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('obd2_index') }}">OBD2 Diagnostics</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('obd2_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">APS Calibration</li>
+                </ol>
+            </nav>
+            <h1 class="mb-4"><i class="fas fa-sliders-h me-2"></i> Accelerator Pedal Position Sensor Calibration</h1>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i> <strong>Caution:</strong> Modifying APS settings incorrectly can affect vehicle performance and safety. Only proceed if you're a qualified technician.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="calibration-container">
+                <h3>Current APS Readings</h3>
+                <p class="text-muted">Live Accelerator Pedal Position Sensor data from vehicle ECU</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="value-display">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>APS 1 Value:</span>
+                                <span class="sensor-status status-normal" id="aps1-status">Normal</span>
+                            </div>
+                            <div class="sensor-value" id="aps1-value">--</div>
+                            <div class="text-muted">Range: 0.0V - 5.0V</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="value-display">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>APS 2 Value:</span>
+                                <span class="sensor-status status-normal" id="aps2-status">Normal</span>
+                            </div>
+                            <div class="sensor-value" id="aps2-value">--</div>
+                            <div class="text-muted">Range: 0.0V - 5.0V</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="gauge-container" id="aps-gauge"></div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h4>APS Correlation</h4>
+                        <p class="text-muted">Relationship between APS1 and APS2 (should maintain approximately 2:1 ratio)</p>
+                        <div class="gauge-container" id="correlation-chart"></div>
+                    </div>
+                </div>
+                
+                <div class="danger-zone">
+                    <h4><i class="fas fa-tools me-2"></i> APS Calibration Controls</h4>
+                    <p class="text-muted">Adjust APS reference values to recalibrate sensor readings</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="aps1-min" class="form-label">APS 1 Minimum (Idle Position)</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range" min="0" max="1" step="0.01" id="aps1-min" value="0.39">
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small>0.0V</small>
+                                    <small id="aps1-min-value">0.39V</small>
+                                    <small>1.0V</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="aps1-max" class="form-label">APS 1 Maximum (Full Throttle)</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range" min="3" max="5" step="0.01" id="aps1-max" value="4.12">
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small>3.0V</small>
+                                    <small id="aps1-max-value">4.12V</small>
+                                    <small>5.0V</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="aps2-min" class="form-label">APS 2 Minimum (Idle Position)</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range" min="0" max="1" step="0.01" id="aps2-min" value="0.19">
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small>0.0V</small>
+                                    <small id="aps2-min-value">0.19V</small>
+                                    <small>1.0V</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="aps2-max" class="form-label">APS 2 Maximum (Full Throttle)</label>
+                                <div class="slider-container">
+                                    <input type="range" class="form-range" min="1.5" max="3" step="0.01" id="aps2-max" value="2.06">
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small>1.5V</small>
+                                    <small id="aps2-max-value">2.06V</small>
+                                    <small>3.0V</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row action-buttons">
+                        <div class="col text-center">
+                            <button class="btn btn-outline-secondary me-2" id="restore-defaults">
+                                <i class="fas fa-undo me-2"></i> Restore Factory Defaults
+                            </button>
+                            <button class="btn btn-primary" id="apply-changes" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+                                <i class="fas fa-save me-2"></i> Apply Calibration Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="calibration-container">
+                <h3>APS Information</h3>
+                <p><strong>Vehicle:</strong> {{ vehicle_info.year }} {{ vehicle_info.make }} {{ vehicle_info.model }}</p>
+                <p><strong>VIN:</strong> {{ vehicle_info.vin or 'Not available' }}</p>
+                <p><strong>ECU Name:</strong> {{ vehicle_info.ecu_name or 'Not available' }}</p>
+                
+                <h4 class="mt-4">About APS Calibration</h4>
+                <p>The Accelerator Pedal Position Sensor (APS) converts the physical position of the gas pedal to an electrical signal for the ECU. Most modern vehicles use dual sensors for redundancy and safety.</p>
+                
+                <h5 class="mt-3">Common APS Issues:</h5>
+                <ul>
+                    <li>Inconsistent acceleration</li>
+                    <li>Engine hesitation</li>
+                    <li>Check Engine Light</li>
+                    <li>Incorrect idle or full throttle readings</li>
+                </ul>
+                
+                <h5 class="mt-3">Reading History</h5>
+                <div class="reading-history" id="reading-history">
+                    <div class="history-item">
+                        <small class="text-muted">Waiting for data...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade confirmation-modal" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirm APS Calibration Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i> <strong>Warning:</strong> You are about to change critical vehicle sensor calibrations. Incorrect settings can affect vehicle drivability and safety.
+                </div>
+                <p>Please confirm that you want to apply the following changes:</p>
+                <ul id="changes-list">
+                    <li>APS 1 Min: <span id="confirm-aps1-min">0.39V</span></li>
+                    <li>APS 1 Max: <span id="confirm-aps1-max">4.12V</span></li>
+                    <li>APS 2 Min: <span id="confirm-aps2-min">0.19V</span></li>
+                    <li>APS 2 Max: <span id="confirm-aps2-max">2.06V</span></li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-apply">Apply Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts
+        const apsGaugeCtx = document.getElementById('aps-gauge').getContext('2d');
+        const correlationChartCtx = document.getElementById('correlation-chart').getContext('2d');
+        
+        // APS Gauge chart
+        const apsGauge = new Chart(apsGaugeCtx, {
+            type: 'bar',
+            data: {
+                labels: ['APS 1', 'APS 2'],
+                datasets: [{
+                    label: 'Voltage',
+                    data: [0, 0],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 99, 132, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 5,
+                        title: {
+                            display: true,
+                            text: 'Voltage (V)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Correlation scatter chart
+        const correlationChart = new Chart(correlationChartCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'APS 1 vs APS 2',
+                    data: [{x: 0.39, y: 0.19}, {x: 4.12, y: 2.06}],
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    pointRadius: 6
+                }, {
+                    label: 'Ideal Correlation',
+                    data: [{x: 0, y: 0}, {x: 5, y: 2.5}],
+                    backgroundColor: 'rgba(255, 206, 86, 0.5)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    pointRadius: 0,
+                    borderDash: [5, 5],
+                    borderWidth: 2,
+                    showLine: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: 0,
+                        max: 5,
+                        title: {
+                            display: true,
+                            text: 'APS 1 (V)'
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        max: 3,
+                        title: {
+                            display: true,
+                            text: 'APS 2 (V)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Slider event handlers
+        const aps1Min = document.getElementById('aps1-min');
+        const aps1Max = document.getElementById('aps1-max');
+        const aps2Min = document.getElementById('aps2-min');
+        const aps2Max = document.getElementById('aps2-max');
+        
+        const aps1MinValue = document.getElementById('aps1-min-value');
+        const aps1MaxValue = document.getElementById('aps1-max-value');
+        const aps2MinValue = document.getElementById('aps2-min-value');
+        const aps2MaxValue = document.getElementById('aps2-max-value');
+        
+        aps1Min.addEventListener('input', function() {
+            aps1MinValue.textContent = this.value + 'V';
+            updateCorrelationChart();
+            updateConfirmationValues();
+        });
+        
+        aps1Max.addEventListener('input', function() {
+            aps1MaxValue.textContent = this.value + 'V';
+            updateCorrelationChart();
+            updateConfirmationValues();
+        });
+        
+        aps2Min.addEventListener('input', function() {
+            aps2MinValue.textContent = this.value + 'V';
+            updateCorrelationChart();
+            updateConfirmationValues();
+        });
+        
+        aps2Max.addEventListener('input', function() {
+            aps2MaxValue.textContent = this.value + 'V';
+            updateCorrelationChart();
+            updateConfirmationValues();
+        });
+        
+        function updateCorrelationChart() {
+            correlationChart.data.datasets[0].data = [
+                {x: parseFloat(aps1Min.value), y: parseFloat(aps2Min.value)},
+                {x: parseFloat(aps1Max.value), y: parseFloat(aps2Max.value)}
+            ];
+            correlationChart.update();
+        }
+        
+        function updateConfirmationValues() {
+            document.getElementById('confirm-aps1-min').textContent = aps1Min.value + 'V';
+            document.getElementById('confirm-aps1-max').textContent = aps1Max.value + 'V';
+            document.getElementById('confirm-aps2-min').textContent = aps2Min.value + 'V';
+            document.getElementById('confirm-aps2-max').textContent = aps2Max.value + 'V';
+        }
+        
+        // Restore defaults button
+        document.getElementById('restore-defaults').addEventListener('click', function() {
+            aps1Min.value = 0.39;
+            aps1Max.value = 4.12;
+            aps2Min.value = 0.19;
+            aps2Max.value = 2.06;
+            
+            aps1MinValue.textContent = '0.39V';
+            aps1MaxValue.textContent = '4.12V';
+            aps2MinValue.textContent = '0.19V';
+            aps2MaxValue.textContent = '2.06V';
+            
+            updateCorrelationChart();
+            updateConfirmationValues();
+        });
+        
+        // Apply changes button
+        document.getElementById('confirm-apply').addEventListener('click', function() {
+            // This would actually send the new calibration values to the vehicle
+            // For now, we'll just simulate it with a message
+            
+            const historyContainer = document.getElementById('reading-history');
+            const newItem = document.createElement('div');
+            newItem.className = 'history-item';
+            newItem.innerHTML = `
+                <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                <div>Applied new calibration values</div>
+                <div class="text-success">APS calibration successful</div>
+            `;
+            historyContainer.prepend(newItem);
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+            modal.hide();
+            
+            // Show success message
+            alert('APS calibration values successfully applied to vehicle ECU');
+        });
+        
+        // Simulate live data updates
+        let aps1BaseValue = 0.82;
+        let aps2BaseValue = 0.41;
+        
+        function updateLiveData() {
+            // Simulate some random variation
+            const variation = Math.sin(Date.now() / 1000) * 0.02;
+            
+            const aps1Value = aps1BaseValue + variation;
+            const aps2Value = aps2BaseValue + (variation * 0.5);
+            
+            // Update displayed values
+            document.getElementById('aps1-value').textContent = aps1Value.toFixed(2) + 'V';
+            document.getElementById('aps2-value').textContent = aps2Value.toFixed(2) + 'V';
+            
+            // Update gauge chart
+            apsGauge.data.datasets[0].data = [aps1Value, aps2Value];
+            apsGauge.update();
+            
+            // Log random readings periodically
+            if (Math.random() < 0.1) {
+                logReading(aps1Value, aps2Value);
+            }
+            
+            // Schedule next update
+            setTimeout(updateLiveData, 500);
+        }
+        
+        function logReading(aps1, aps2) {
+            const historyContainer = document.getElementById('reading-history');
+            const newItem = document.createElement('div');
+            newItem.className = 'history-item';
+            
+            const ratio = (aps2 / aps1).toFixed(2);
+            const timestamp = new Date().toLocaleTimeString();
+            
+            let statusText = 'Normal';
+            let statusClass = 'text-success';
+            
+            if (ratio < 0.45 || ratio > 0.55) {
+                statusText = 'Warning: Ratio outside normal range';
+                statusClass = 'text-warning';
+            }
+            
+            newItem.innerHTML = `
+                <small class="text-muted">${timestamp}</small>
+                <div>APS1: ${aps1.toFixed(2)}V, APS2: ${aps2.toFixed(2)}V</div>
+                <div class="${statusClass}">Ratio: ${ratio} - ${statusText}</div>
+            `;
+            
+            historyContainer.prepend(newItem);
+            
+            // Limit history items
+            const items = historyContainer.getElementsByClassName('history-item');
+            if (items.length > 20) {
+                historyContainer.removeChild(items[items.length - 1]);
+            }
+        }
+        
+        // Start live data updates
+        updateLiveData();
+    });
+</script>
+{% endblock %}

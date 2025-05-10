@@ -1,23 +1,55 @@
 {% extends "layout.html" %}
 
-{% block title %}OBD2 Dashboard{% endblock %}
+{% block title %}OBD2 Diagnostic Dashboard{% endblock %}
 
 {% block head %}
 <style>
     .dashboard-header {
-        margin-bottom: 20px;
-    }
-    
-    .vehicle-info-card {
         background-color: #232b36;
         border-radius: 8px;
-        margin-bottom: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
     }
     
-    .connection-status {
-        display: flex;
-        align-items: center;
-        margin-top: 10px;
+    .dashboard-card {
+        background-color: #232b36;
+        border-radius: 8px;
+        height: 100%;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .dashboard-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #17a2b8;
+    }
+    
+    .history-container {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .history-item {
+        background-color: #2c3542;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .history-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .history-date {
+        color: #adb5bd;
+        font-size: 0.85rem;
     }
     
     .status-indicator {
@@ -25,664 +57,294 @@
         height: 12px;
         border-radius: 50%;
         display: inline-block;
-        margin-right: 10px;
+        margin-right: 0.5rem;
     }
     
-    .status-indicator.connected {
+    .status-success {
         background-color: #28a745;
-        box-shadow: 0 0 10px #28a745;
     }
     
-    .gauge-container {
-        width: 100%;
-        height: 200px;
-        position: relative;
-        margin-bottom: 20px;
+    .status-warning {
+        background-color: #ffc107;
     }
     
-    .gauge-card {
-        height: 100%;
+    .status-danger {
+        background-color: #dc3545;
+    }
+    
+    .status-info {
+        background-color: #17a2b8;
+    }
+    
+    .tools-container {
         background-color: #232b36;
         border-radius: 8px;
-        overflow: hidden;
-        position: relative;
+        padding: 1.5rem;
+        margin-top: 2rem;
     }
     
-    .gauge-title {
-        position: absolute;
-        bottom: 15px;
-        left: 0;
-        right: 0;
-        text-align: center;
-        font-size: 14px;
-        color: #fff;
-        z-index: 10;
-    }
-    
-    .gauge-value {
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        text-align: center;
-        font-size: 24px;
-        font-weight: bold;
-        transform: translateY(-50%);
-        color: #fff;
-        z-index: 10;
-    }
-    
-    .gauge-unit {
-        font-size: 14px;
-        color: #aaa;
-    }
-    
-    .sensor-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .sensor-card {
-        background-color: #232b36;
-        border-radius: 8px;
-        padding: 15px;
-        position: relative;
-    }
-    
-    .sensor-card-title {
-        margin-bottom: 10px;
-        color: #17a2b8;
-        font-size: 16px;
-        font-weight: bold;
-    }
-    
-    .sensor-card-value {
-        font-size: 22px;
-        font-weight: bold;
-    }
-    
-    .sensor-card-unit {
-        font-size: 14px;
-        color: #aaa;
-        margin-left: 5px;
-    }
-    
-    .dtc-panel {
-        background-color: #232b36;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .dtc-title {
-        margin-bottom: 15px;
-        color: #17a2b8;
-    }
-    
-    .dtc-list {
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    
-    .dtc-item {
+    .tool-card {
         background-color: #2c3542;
-        margin-bottom: 10px;
         border-radius: 6px;
-        padding: 15px;
-        border-left: 4px solid;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
     }
     
-    .dtc-item.critical {
-        border-color: #dc3545;
+    .tool-card:hover {
+        transform: translateY(-3px);
     }
     
-    .dtc-item.high {
-        border-color: #fd7e14;
+    .tool-icon {
+        font-size: 1.5rem;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-bottom: 1rem;
     }
     
-    .dtc-item.medium {
-        border-color: #ffc107;
-    }
-    
-    .dtc-item.low {
-        border-color: #28a745;
-    }
-    
-    .dtc-code {
-        font-family: monospace;
-        font-size: 18px;
-        font-weight: bold;
-    }
-    
-    .dtc-description {
-        margin-top: 5px;
-        font-size: 14px;
-    }
-    
-    .dtc-severity {
-        float: right;
-        text-transform: uppercase;
-        font-size: 12px;
-        font-weight: bold;
-        padding: 4px 8px;
-        border-radius: 4px;
-    }
-    
-    .dtc-severity.critical {
-        background-color: rgba(220, 53, 69, 0.2);
-        color: #dc3545;
-    }
-    
-    .dtc-severity.high {
-        background-color: rgba(253, 126, 20, 0.2);
-        color: #fd7e14;
-    }
-    
-    .dtc-severity.medium {
-        background-color: rgba(255, 193, 7, 0.2);
-        color: #ffc107;
-    }
-    
-    .dtc-severity.low {
-        background-color: rgba(40, 167, 69, 0.2);
+    .scan-icon {
         color: #28a745;
+        background-color: rgba(40, 167, 69, 0.1);
     }
     
-    .action-btn {
-        margin-right: 10px;
-    }
-    
-    .refresh-icon {
-        margin-left: 10px;
-        cursor: pointer;
-        transition: transform 0.3s;
-    }
-    
-    .refresh-icon:hover {
-        transform: rotate(90deg);
-    }
-    
-    .refresh-icon.refreshing {
-        animation: rotate 1s infinite linear;
-    }
-    
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    .chart-container {
-        height: 300px;
-        margin-bottom: 20px;
-        background-color: #232b36;
-        border-radius: 8px;
-        padding: 15px;
-    }
-    
-    .tab-content {
-        padding-top: 20px;
-    }
-    
-    .scan-progress {
-        height: 25px;
-        margin-bottom: 20px;
-    }
-    
-    .freeze-frame-data {
-        background-color: #232b36;
-        border-radius: 8px;
-        padding: 20px;
-        margin-top: 20px;
-    }
-    
-    .freeze-frame-title {
-        margin-bottom: 15px;
+    .monitor-icon {
         color: #17a2b8;
+        background-color: rgba(23, 162, 184, 0.1);
     }
     
-    .freeze-frame-table {
-        margin-bottom: 0;
+    .dtc-icon {
+        color: #dc3545;
+        background-color: rgba(220, 53, 69, 0.1);
     }
     
-    .freeze-frame-table th {
-        border-top: none;
+    .aps-icon {
+        color: #fd7e14;
+        background-color: rgba(253, 126, 20, 0.1);
+    }
+    
+    .vehicle-info {
+        padding: 1.5rem;
+        background-color: #2c3542;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Dashboard Header -->
-    <div class="row dashboard-header">
-        <div class="col-md-6">
-            <h1><i class="fas fa-tachometer-alt me-2"></i> OBD2 Dashboard</h1>
-            <div class="connection-status">
-                <span class="status-indicator connected"></span>
-                <span>Connected to: {{ vehicle_info.make }} {{ vehicle_info.model }} ({{ vehicle_info.year }})</span>
-                <a href="#" class="ms-3" data-bs-toggle="modal" data-bs-target="#connectionInfoModal">
-                    <i class="fas fa-info-circle"></i> Connection Info
+<div class="container my-4">
+    <div class="row">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('obd2_index') }}">OBD2 Diagnostics</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-3"><i class="fas fa-tachometer-alt me-2"></i> OBD2 Diagnostic Dashboard</h1>
+                <p class="text-muted mb-0">Connected to {{ vehicle_info.year }} {{ vehicle_info.make }} {{ vehicle_info.model }}</p>
+                {% if vehicle_info.vin %}
+                <p class="text-muted mb-0"><small>VIN: {{ vehicle_info.vin }}</small></p>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{{ url_for('reset') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-sign-out-alt me-2"></i> Disconnect
                 </a>
             </div>
         </div>
-        <div class="col-md-6 text-end">
-            <a href="{{ url_for('obd2_scan') }}" class="btn btn-primary action-btn">
-                <i class="fas fa-search me-2"></i> Scan for DTCs
-            </a>
-            <a href="{{ url_for('reset') }}" class="btn btn-secondary action-btn">
-                <i class="fas fa-power-off me-2"></i> Disconnect
-            </a>
-            <button id="refresh-data" class="btn btn-info">
-                <i class="fas fa-sync-alt me-2"></i> Refresh Data
-            </button>
-        </div>
     </div>
-    
-    <!-- Navigation Tabs -->
-    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="realtime-tab" data-bs-toggle="tab" data-bs-target="#realtime" type="button" role="tab" aria-controls="realtime" aria-selected="true">
-                <i class="fas fa-chart-line me-2"></i> Real-Time Data
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="dtc-tab" data-bs-toggle="tab" data-bs-target="#dtc" type="button" role="tab" aria-controls="dtc" aria-selected="false">
-                <i class="fas fa-exclamation-triangle me-2"></i> Trouble Codes
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
-                <i class="fas fa-history me-2"></i> History
-            </button>
-        </li>
-    </ul>
-    
-    <!-- Tab Content -->
-    <div class="tab-content" id="dashboardTabsContent">
-        <!-- Real-Time Data Tab -->
-        <div class="tab-pane fade show active" id="realtime" role="tabpanel" aria-labelledby="realtime-tab">
-            <!-- Main Gauges -->
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="gauge-container">
-                        <div class="gauge-card">
-                            <canvas id="rpmGauge"></canvas>
-                            <div class="gauge-value">
-                                <span id="rpmValue">0</span>
-                                <span class="gauge-unit">RPM</span>
-                            </div>
-                            <div class="gauge-title">Engine Speed</div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <h3 class="mb-3">Diagnostic Tools</h3>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="tool-card h-100">
+                        <div class="tool-icon scan-icon">
+                            <i class="fas fa-search"></i>
                         </div>
+                        <h4>Diagnostic Scan</h4>
+                        <p>Run a complete diagnostic scan to read trouble codes (DTCs), retrieve freeze frame data, and identify potential issues.</p>
+                        <a href="{{ url_for('obd2_scan') }}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i> Start Scan
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="gauge-container">
-                        <div class="gauge-card">
-                            <canvas id="speedGauge"></canvas>
-                            <div class="gauge-value">
-                                <span id="speedValue">0</span>
-                                <span class="gauge-unit">km/h</span>
-                            </div>
-                            <div class="gauge-title">Vehicle Speed</div>
+                <div class="col-md-6">
+                    <div class="tool-card h-100">
+                        <div class="tool-icon monitor-icon">
+                            <i class="fas fa-chart-line"></i>
                         </div>
+                        <h4>Live Data Monitor</h4>
+                        <p>Monitor real-time data from your vehicle's sensors. Track engine performance, fuel efficiency, and more.</p>
+                        <a href="#" class="btn btn-info">
+                            <i class="fas fa-chart-line me-2"></i> Monitor
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="gauge-container">
-                        <div class="gauge-card">
-                            <canvas id="loadGauge"></canvas>
-                            <div class="gauge-value">
-                                <span id="loadValue">0</span>
-                                <span class="gauge-unit">%</span>
-                            </div>
-                            <div class="gauge-title">Engine Load</div>
+                <div class="col-md-6 mt-3">
+                    <div class="tool-card h-100">
+                        <div class="tool-icon dtc-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
+                        <h4>DTC Management</h4>
+                        <p>View and clear diagnostic trouble codes. Access detailed information about each code and recommended fixes.</p>
+                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#dtcModal">
+                            <i class="fas fa-trash-alt me-2"></i> Clear DTCs
+                        </button>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="gauge-container">
-                        <div class="gauge-card">
-                            <canvas id="tempGauge"></canvas>
-                            <div class="gauge-value">
-                                <span id="tempValue">0</span>
-                                <span class="gauge-unit">°C</span>
-                            </div>
-                            <div class="gauge-title">Coolant Temperature</div>
+                <div class="col-md-6 mt-3">
+                    <div class="tool-card h-100">
+                        <div class="tool-icon aps-icon">
+                            <i class="fas fa-sliders-h"></i>
                         </div>
+                        <h4>APS Calibration</h4>
+                        <p>Calibrate and adjust Accelerator Pedal Position Sensor (APS) settings to improve throttle response and performance.</p>
+                        <a href="{{ url_for('obd2_aps_calibration') }}" class="btn btn-warning">
+                            <i class="fas fa-sliders-h me-2"></i> Calibrate APS
+                        </a>
                     </div>
                 </div>
             </div>
             
-            <!-- Real-time Chart -->
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="chart-container">
-                        <canvas id="realtimeChart"></canvas>
+            {% if diagnostic_sessions %}
+            <div class="history-container mt-4">
+                <h3 class="mb-3"><i class="fas fa-history me-2"></i> Diagnostic History</h3>
+                {% for session in diagnostic_sessions[:5] %}
+                <div class="history-item">
+                    <div class="d-flex justify-content-between align-items-top mb-2">
+                        <h5 class="mb-0">
+                            {% if session.success %}
+                            <span class="status-indicator status-success"></span>
+                            {% else %}
+                            <span class="status-indicator status-danger"></span>
+                            {% endif %}
+                            Diagnostic Session {{ session.id }}
+                        </h5>
+                        <span class="history-date">{{ session.started_at.strftime('%Y-%m-%d %H:%M') }}</span>
                     </div>
+                    <p class="mb-2">{{ session.notes or 'No notes available' }}</p>
+                    <div>
+                        {% if session.success %}
+                        <a href="{{ url_for('obd2_results', session_id=session.id) }}" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-eye me-1"></i> View Results
+                        </a>
+                        {% else %}
+                        <span class="badge bg-danger">Failed</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if diagnostic_sessions|length > 5 %}
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-history me-2"></i> View All History
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="vehicle-info">
+                <h3 class="mb-3"><i class="fas fa-car me-2"></i> Vehicle Information</h3>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-transparent border-light">
+                        <strong>Make:</strong> {{ vehicle_info.make }}
+                    </li>
+                    <li class="list-group-item bg-transparent border-light">
+                        <strong>Model:</strong> {{ vehicle_info.model }}
+                    </li>
+                    <li class="list-group-item bg-transparent border-light">
+                        <strong>Year:</strong> {{ vehicle_info.year }}
+                    </li>
+                    {% if vehicle_info.mileage %}
+                    <li class="list-group-item bg-transparent border-light">
+                        <strong>Mileage:</strong> {{ vehicle_info.mileage }}
+                    </li>
+                    {% endif %}
+                    {% if vehicle_info.vin %}
+                    <li class="list-group-item bg-transparent border-light">
+                        <strong>VIN:</strong> {{ vehicle_info.vin }}
+                    </li>
+                    {% endif %}
+                    {% if vehicle_info.ecu_name %}
+                    <li class="list-group-item bg-transparent border-light">
+                        <strong>ECU:</strong> {{ vehicle_info.ecu_name }}
+                    </li>
+                    {% endif %}
+                    {% if vehicle_info.protocol %}
+                    <li class="list-group-item bg-transparent border-light">
+                        <strong>Protocol:</strong> {{ vehicle_info.protocol }}
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="mt-3">
+                    <a href="{{ url_for('obd2_connect') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-edit me-1"></i> Edit Vehicle
+                    </a>
                 </div>
             </div>
             
-            <!-- Sensor Readings -->
-            <div class="row">
-                <div class="col-md-12">
-                    <h4>
-                        <i class="fas fa-microchip me-2"></i> Sensor Readings
-                        <i class="fas fa-sync-alt refresh-icon" id="refresh-sensors"></i>
-                    </h4>
-                    <div class="sensor-grid" id="sensors-container">
-                        <!-- Sensors will be dynamically populated -->
-                        <div class="sensor-card">
-                            <div class="sensor-card-title">Intake Air Temperature</div>
-                            <div class="sensor-card-value">24<span class="sensor-card-unit">°C</span></div>
-                        </div>
-                        <div class="sensor-card">
-                            <div class="sensor-card-title">Mass Air Flow</div>
-                            <div class="sensor-card-value">13.2<span class="sensor-card-unit">g/s</span></div>
-                        </div>
-                        <div class="sensor-card">
-                            <div class="sensor-card-title">Throttle Position</div>
-                            <div class="sensor-card-value">17<span class="sensor-card-unit">%</span></div>
-                        </div>
-                        <div class="sensor-card">
-                            <div class="sensor-card-title">Fuel Level</div>
-                            <div class="sensor-card-value">76<span class="sensor-card-unit">%</span></div>
-                        </div>
-                        <div class="sensor-card">
-                            <div class="sensor-card-title">Timing Advance</div>
-                            <div class="sensor-card-value">12.5<span class="sensor-card-unit">°</span></div>
-                        </div>
-                        <div class="sensor-card">
-                            <div class="sensor-card-title">O2 Sensor Voltage</div>
-                            <div class="sensor-card-value">0.85<span class="sensor-card-unit">V</span></div>
-                        </div>
-                        <div class="sensor-card">
-                            <div class="sensor-card-title">Fuel Pressure</div>
-                            <div class="sensor-card-value">380<span class="sensor-card-unit">kPa</span></div>
-                        </div>
-                        <div class="sensor-card">
-                            <div class="sensor-card-title">Barometric Pressure</div>
-                            <div class="sensor-card-value">101<span class="sensor-card-unit">kPa</span></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="text-center mt-4">
+                <img src="https://cdn4.iconfinder.com/data/icons/car-maintenance-2/64/car-service-diagnostics-tool-vehicle-512.png" alt="OBD2 Diagnostic" style="max-width: 100%; height: auto; max-height: 200px; opacity: 0.7;">
             </div>
-        </div>
-        
-        <!-- Trouble Codes Tab -->
-        <div class="tab-pane fade" id="dtc" role="tabpanel" aria-labelledby="dtc-tab">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3><i class="fas fa-exclamation-triangle me-2"></i> Diagnostic Trouble Codes</h3>
-                        <div>
-                            <button id="refresh-dtc" class="btn btn-info me-2">
-                                <i class="fas fa-sync-alt me-2"></i> Refresh
-                            </button>
-                            <button id="clear-dtc" class="btn btn-warning">
-                                <i class="fas fa-trash-alt me-2"></i> Clear DTCs
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- DTC Summary -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="card text-white bg-danger">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">Critical</h5>
-                                    <p class="card-text display-4" id="critical-count">0</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-white bg-warning">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">High</h5>
-                                    <p class="card-text display-4" id="high-count">2</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-white bg-info">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">Medium</h5>
-                                    <p class="card-text display-4" id="medium-count">1</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-white bg-success">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">Low</h5>
-                                    <p class="card-text display-4" id="low-count">0</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- DTC List -->
-                    <div class="dtc-panel">
-                        <h4 class="dtc-title">Current Trouble Codes</h4>
-                        <div class="dtc-list" id="dtc-container">
-                            <!-- DTC items will be populated dynamically -->
-                            <div class="dtc-item high">
-                                <span class="dtc-severity high">High</span>
-                                <div class="dtc-code">P0301</div>
-                                <div class="dtc-description">Cylinder 1 Misfire Detected</div>
-                            </div>
-                            <div class="dtc-item high">
-                                <span class="dtc-severity high">High</span>
-                                <div class="dtc-code">P0420</div>
-                                <div class="dtc-description">Catalyst System Efficiency Below Threshold (Bank 1)</div>
-                            </div>
-                            <div class="dtc-item medium">
-                                <span class="dtc-severity medium">Medium</span>
-                                <div class="dtc-code">P0171</div>
-                                <div class="dtc-description">System Too Lean (Bank 1)</div>
-                            </div>
-                            
-                            <!-- Empty state -->
-                            <div id="empty-dtc" class="text-center py-4" style="display: none;">
-                                <i class="fas fa-check-circle text-success" style="font-size: 48px;"></i>
-                                <p class="lead mt-3">No trouble codes detected</p>
-                                <p class="text-muted">Your vehicle's diagnostic system is not reporting any errors.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Freeze Frame Data -->
-                    <div class="freeze-frame-data">
-                        <h4 class="freeze-frame-title">Freeze Frame Data</h4>
-                        <p class="text-muted mb-3">This data shows the vehicle conditions when the DTC was set.</p>
-                        <div class="table-responsive">
-                            <table class="table table-dark table-striped freeze-frame-table">
-                                <thead>
-                                    <tr>
-                                        <th>Parameter</th>
-                                        <th>Value</th>
-                                        <th>Unit</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>DTC that caused freeze frame</td>
-                                        <td>P0301</td>
-                                        <td>-</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Engine RPM</td>
-                                        <td>2150</td>
-                                        <td>RPM</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Vehicle Speed</td>
-                                        <td>45</td>
-                                        <td>km/h</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Engine Load</td>
-                                        <td>62</td>
-                                        <td>%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Coolant Temperature</td>
-                                        <td>85</td>
-                                        <td>°C</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Short Term Fuel Trim</td>
-                                        <td>10.5</td>
-                                        <td>%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Long Term Fuel Trim</td>
-                                        <td>8.2</td>
-                                        <td>%</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Intake Air Temperature</td>
-                                        <td>22</td>
-                                        <td>°C</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- History Tab -->
-        <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
-            <div class="row">
-                <div class="col-md-12">
-                    <h3><i class="fas fa-history me-2"></i> Diagnostic History</h3>
-                    <p class="text-muted">View past diagnostic sessions and their results.</p>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Date</th>
-                                    <th>DTCs Found</th>
-                                    <th>Severity</th>
-                                    <th>Duration</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if diagnostic_sessions %}
-                                    {% for session in diagnostic_sessions %}
-                                    <tr>
-                                        <td>{{ session.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                                        <td>{{ session.dtcs|length }} code(s)</td>
-                                        <td>
-                                            {% if session.severity == 'critical' %}
-                                            <span class="badge bg-danger">Critical</span>
-                                            {% elif session.severity == 'high' %}
-                                            <span class="badge bg-warning text-dark">High</span>
-                                            {% elif session.severity == 'medium' %}
-                                            <span class="badge bg-info text-dark">Medium</span>
-                                            {% else %}
-                                            <span class="badge bg-success">Low</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ session.duration }} min</td>
-                                        <td>
-                                            <a href="{{ url_for('obd2_results', session_id=session.id) }}" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="5" class="text-center">No diagnostic history available</td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
+            
+            <div class="tools-container mt-4">
+                <h4 class="mb-3">Quick Links</h4>
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent border-light">
+                        <i class="fas fa-book me-2"></i> User Manual
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent border-light">
+                        <i class="fas fa-question-circle me-2"></i> OBD2 Troubleshooting
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action bg-transparent border-light">
+                        <i class="fas fa-wrench me-2"></i> Advanced Settings
+                    </a>
+                    <a href="{{ url_for('obd2_aps_calibration') }}" class="list-group-item list-group-item-action bg-transparent border-light">
+                        <i class="fas fa-sliders-h me-2"></i> APS Calibration Tool
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Connection Info Modal -->
-<div class="modal fade" id="connectionInfoModal" tabindex="-1" aria-labelledby="connectionInfoModalLabel" aria-hidden="true">
+<!-- DTC Clear Confirmation Modal -->
+<div class="modal fade" id="dtcModal" tabindex="-1" aria-labelledby="dtcModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="connectionInfoModalLabel">Connection Information</h5>
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dtcModalLabel">Confirm DTC Clear</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <tbody>
-                            <tr>
-                                <th>Vehicle:</th>
-                                <td>{{ vehicle_info.year }} {{ vehicle_info.make }} {{ vehicle_info.model }}</td>
-                            </tr>
-                            <tr>
-                                <th>VIN:</th>
-                                <td>{{ vehicle_info.vin or 'Not available' }}</td>
-                            </tr>
-                            <tr>
-                                <th>Protocol:</th>
-                                <td>{{ vehicle_info.protocol or 'Auto' }}</td>
-                            </tr>
-                            <tr>
-                                <th>ECU Name:</th>
-                                <td>{{ vehicle_info.ecu_name or 'Unknown' }}</td>
-                            </tr>
-                            <tr>
-                                <th>Connection Type:</th>
-                                <td>USB</td>
-                            </tr>
-                            <tr>
-                                <th>Connected Since:</th>
-                                <td>{{ session.started_at.strftime('%Y-%m-%d %H:%M:%S') if session and session.started_at else 'Unknown' }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Clear DTCs Confirmation Modal -->
-<div class="modal fade" id="clearDtcModal" tabindex="-1" aria-labelledby="clearDtcModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="clearDtcModalLabel">Clear Trouble Codes</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-3">
-                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 48px;"></i>
-                </div>
-                <p class="lead text-center">Are you sure you want to clear all diagnostic trouble codes?</p>
                 <div class="alert alert-warning">
-                    <p><strong>Warning:</strong></p>
-                    <ul>
-                        <li>This will reset the check engine light</li>
-                        <li>If the issue persists, the code may return</li>
-                        <li>Clearing codes will not fix mechanical problems</li>
-                        <li>Some vehicles may require additional steps after clearing codes</li>
-                    </ul>
+                    <i class="fas fa-exclamation-triangle me-2"></i> Are you sure you want to clear all diagnostic trouble codes?
                 </div>
+                <p>This will reset the check engine light and clear all stored diagnostic information. If problems still exist, the check engine light may come back on after driving.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning" id="confirm-clear-dtc">Confirm Clear</button>
+                <button type="button" class="btn btn-danger" id="confirmClearDtcs">
+                    <i class="fas fa-trash-alt me-2"></i> Clear DTCs
+                </button>
             </div>
         </div>
     </div>
@@ -690,292 +352,33 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Elements
-        const refreshDataBtn = document.getElementById('refresh-data');
-        const refreshDtcBtn = document.getElementById('refresh-dtc');
-        const clearDtcBtn = document.getElementById('clear-dtc');
-        const confirmClearDtcBtn = document.getElementById('confirm-clear-dtc');
-        const refreshSensorsIcon = document.getElementById('refresh-sensors');
-        
-        // Initialize gauges
-        const rpmGauge = initGauge('rpmGauge', 0, 8000, 'RPM');
-        const speedGauge = initGauge('speedGauge', 0, 220, 'km/h');
-        const loadGauge = initGauge('loadGauge', 0, 100, '%');
-        const tempGauge = initGauge('tempGauge', -40, 140, '°C');
-        
-        // Initialize chart
-        const ctx = document.getElementById('realtimeChart').getContext('2d');
-        const realtimeChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Array(20).fill(''),
-                datasets: [{
-                    label: 'RPM',
-                    data: Array(20).fill(0),
-                    borderColor: '#dc3545',
-                    tension: 0.3,
-                    fill: false
-                }, {
-                    label: 'Speed',
-                    data: Array(20).fill(0),
-                    borderColor: '#ffc107',
-                    tension: 0.3,
-                    fill: false
-                }, {
-                    label: 'Load',
-                    data: Array(20).fill(0),
-                    borderColor: '#28a745',
-                    tension: 0.3,
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                animation: {
-                    duration: 300
+        // Handle DTC clear confirmation
+        document.getElementById('confirmClearDtcs').addEventListener('click', function() {
+            // Make AJAX request to clear DTCs
+            fetch('{{ url_for("api_clear_dtcs") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 }
-            }
-        });
-        
-        // Clear DTCs button
-        clearDtcBtn.addEventListener('click', function() {
-            const clearDtcModal = new bootstrap.Modal(document.getElementById('clearDtcModal'));
-            clearDtcModal.show();
-        });
-        
-        // Confirm clear DTCs button
-        confirmClearDtcBtn.addEventListener('click', function() {
-            // In a real implementation, this would call an API endpoint to clear DTCs
-            fetch('/api/obd2/clear-dtcs', {
-                method: 'POST'
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Hide the modal
-                    bootstrap.Modal.getInstance(document.getElementById('clearDtcModal')).hide();
-                    
-                    // Show success message
-                    alert('Trouble codes cleared successfully! The check engine light should now be off.');
-                    
-                    // Update DTC display
-                    document.getElementById('dtc-container').innerHTML = `
-                        <div id="empty-dtc" class="text-center py-4">
-                            <i class="fas fa-check-circle text-success" style="font-size: 48px;"></i>
-                            <p class="lead mt-3">No trouble codes detected</p>
-                            <p class="text-muted">Your vehicle's diagnostic system is not reporting any errors.</p>
-                        </div>
-                    `;
-                    
-                    // Reset counters
-                    document.getElementById('critical-count').textContent = '0';
-                    document.getElementById('high-count').textContent = '0';
-                    document.getElementById('medium-count').textContent = '0';
-                    document.getElementById('low-count').textContent = '0';
+                    alert('Diagnostic Trouble Codes successfully cleared');
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('dtcModal'));
+                    modal.hide();
                 } else {
-                    alert('Failed to clear trouble codes: ' + data.error);
+                    alert('Error: ' + data.error);
                 }
             })
             .catch(error => {
-                console.error('Error clearing DTCs:', error);
-                alert('An error occurred while trying to clear the trouble codes.');
+                console.error('Error:', error);
+                alert('Error clearing DTCs. Please try again.');
             });
         });
-        
-        // Refresh data button
-        refreshDataBtn.addEventListener('click', function() {
-            fetchRealTimeData();
-        });
-        
-        // Refresh DTCs button
-        refreshDtcBtn.addEventListener('click', function() {
-            fetchDTCs();
-        });
-        
-        // Refresh sensors icon
-        refreshSensorsIcon.addEventListener('click', function() {
-            refreshSensorsIcon.classList.add('refreshing');
-            fetchSensorData();
-            
-            // Remove the refreshing class after animation completes
-            setTimeout(() => {
-                refreshSensorsIcon.classList.remove('refreshing');
-            }, 1000);
-        });
-        
-        // Fetch real-time data
-        function fetchRealTimeData() {
-            // In a real implementation, this would fetch from an API endpoint
-            // For demonstration, we'll simulate data
-            
-            // Simulate RPM changes
-            const rpm = Math.floor(800 + Math.random() * 3000);
-            document.getElementById('rpmValue').textContent = rpm;
-            rpmGauge.data.datasets[0].data = [rpm];
-            rpmGauge.update();
-            
-            // Simulate speed changes
-            const speed = Math.floor(Math.random() * 120);
-            document.getElementById('speedValue').textContent = speed;
-            speedGauge.data.datasets[0].data = [speed];
-            speedGauge.update();
-            
-            // Simulate load changes
-            const load = Math.floor(20 + Math.random() * 60);
-            document.getElementById('loadValue').textContent = load;
-            loadGauge.data.datasets[0].data = [load];
-            loadGauge.update();
-            
-            // Simulate temperature changes
-            const temp = Math.floor(75 + Math.random() * 15);
-            document.getElementById('tempValue').textContent = temp;
-            tempGauge.data.datasets[0].data = [temp];
-            tempGauge.update();
-            
-            // Update chart
-            realtimeChart.data.datasets[0].data.shift();
-            realtimeChart.data.datasets[0].data.push(rpm / 40);  // Scale down for chart visibility
-            
-            realtimeChart.data.datasets[1].data.shift();
-            realtimeChart.data.datasets[1].data.push(speed);
-            
-            realtimeChart.data.datasets[2].data.shift();
-            realtimeChart.data.datasets[2].data.push(load);
-            
-            realtimeChart.update();
-            
-            // Also fetch sensor data
-            fetchSensorData();
-        }
-        
-        // Fetch sensor data
-        function fetchSensorData() {
-            // In a real implementation, this would fetch from an API endpoint
-            // For demonstration, we'll update the existing sample data with random fluctuations
-            
-            // Get all sensor cards
-            const sensorCards = document.querySelectorAll('.sensor-card');
-            
-            sensorCards.forEach(card => {
-                const valueEl = card.querySelector('.sensor-card-value');
-                const currentValue = parseFloat(valueEl.textContent);
-                
-                // Add a small random fluctuation (±10%)
-                const fluctuation = currentValue * 0.1;
-                const newValue = (currentValue + (Math.random() * fluctuation * 2 - fluctuation)).toFixed(1);
-                
-                // Update only the numeric part, keeping the unit
-                valueEl.childNodes[0].nodeValue = newValue;
-            });
-        }
-        
-        // Fetch DTCs
-        function fetchDTCs() {
-            // In a real implementation, this would fetch from an API endpoint
-            // For demonstration, we'll leave the example data as is
-            console.log('Fetching DTCs...');
-        }
-        
-        // Initialize gauge
-        function initGauge(canvasId, min, max, unit) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            
-            // Determine colors based on the gauge type
-            let colors = {
-                success: '#28a745',
-                warning: '#ffc107',
-                danger: '#dc3545'
-            };
-            
-            // For temperature gauge, use different thresholds
-            let thresholds;
-            if (canvasId === 'tempGauge') {
-                thresholds = [
-                    {value: min, color: colors.danger},     // Too cold
-                    {value: 40, color: colors.warning},     // Warming up
-                    {value: 70, color: colors.success},     // Normal
-                    {value: 105, color: colors.warning},    // Getting hot
-                    {value: 115, color: colors.danger}      // Overheating
-                ];
-            } else if (canvasId === 'rpmGauge') {
-                thresholds = [
-                    {value: min, color: colors.success},
-                    {value: 3000, color: colors.success},
-                    {value: 5000, color: colors.warning},
-                    {value: 6500, color: colors.danger}
-                ];
-            } else if (canvasId === 'loadGauge') {
-                thresholds = [
-                    {value: min, color: colors.success},
-                    {value: 70, color: colors.warning},
-                    {value: 85, color: colors.danger}
-                ];
-            } else {
-                // Default (speed)
-                thresholds = [
-                    {value: min, color: colors.success},
-                    {value: 80, color: colors.warning},
-                    {value: 120, color: colors.danger}
-                ];
-            }
-            
-            // Create gradient for the gauge
-            const createGradient = (ctx, thresholds, min, max) => {
-                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                
-                thresholds.forEach((threshold, index) => {
-                    const position = (threshold.value - min) / (max - min);
-                    gradient.addColorStop(position, threshold.color);
-                });
-                
-                return gradient;
-            };
-            
-            const gradient = createGradient(ctx, thresholds, min, max);
-            
-            return new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [0, max],
-                        backgroundColor: [gradient, '#2c3542'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    circumference: 180,
-                    rotation: 270,
-                    cutout: '70%',
-                    animation: {
-                        duration: 500
-                    },
-                    plugins: {
-                        tooltip: {
-                            enabled: false
-                        },
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Start periodic data updates
-        setInterval(fetchRealTimeData, 2000);
-        
-        // Initial data fetch
-        fetchRealTimeData();
-        fetchDTCs();
     });
 </script>
 {% endblock %}

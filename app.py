@@ -400,6 +400,103 @@ def api_clear_dtcs():
         app.logger.error(f"Error clearing DTCs: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/obd2/aps-calibration')
+def obd2_aps_calibration():
+    """APS Calibration Tool for adjusting Accelerator Pedal Position Sensor settings."""
+    if 'vehicle_id' not in session:
+        return redirect(url_for('obd2_connect'))
+    
+    vehicle_id = session['vehicle_id']
+    
+    # Get vehicle from database
+    from models import Vehicle
+    vehicle = Vehicle.query.get(vehicle_id)
+    
+    if not vehicle:
+        return redirect(url_for('obd2_connect'))
+    
+    return render_template('obd2/aps_calibration.html', vehicle_info=vehicle)
+
+@app.route('/api/obd2/aps/read', methods=['GET'])
+def api_read_aps():
+    """API endpoint to read current APS values from the vehicle."""
+    if 'vehicle_id' not in session:
+        return jsonify({'error': 'No vehicle selected'}), 400
+    
+    try:
+        # Import the OBD2 connector
+        from utils.obd2_connector import create_obd2_connector
+        
+        # Create a connector
+        connector = create_obd2_connector()
+        
+        # Connect to vehicle
+        connection_success = connector.connect()
+        if not connection_success:
+            return jsonify({'error': 'Could not connect to vehicle'}), 500
+        
+        # Read APS values (these would be real APS PIDs in production)
+        aps_data = connector.read_sensor_data(['APS1', 'APS2'])
+        
+        # Disconnect
+        connector.disconnect()
+        
+        return jsonify({
+            'success': True,
+            'aps_data': aps_data
+        })
+    except Exception as e:
+        app.logger.error(f"Error reading APS: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/obd2/aps/calibrate', methods=['POST'])
+def api_calibrate_aps():
+    """API endpoint to write new APS calibration values to the vehicle ECU."""
+    if 'vehicle_id' not in session:
+        return jsonify({'error': 'No vehicle selected'}), 400
+    
+    try:
+        # Get calibration parameters from request
+        aps1_min = request.form.get('aps1_min')
+        aps1_max = request.form.get('aps1_max')
+        aps2_min = request.form.get('aps2_min')
+        aps2_max = request.form.get('aps2_max')
+        
+        # Validate parameters
+        if not all([aps1_min, aps1_max, aps2_min, aps2_max]):
+            return jsonify({'error': 'Missing calibration parameters'}), 400
+        
+        # Import the OBD2 connector
+        from utils.obd2_connector import create_obd2_connector
+        
+        # Create a connector
+        connector = create_obd2_connector()
+        
+        # Connect to vehicle
+        connection_success = connector.connect()
+        if not connection_success:
+            return jsonify({'error': 'Could not connect to vehicle'}), 500
+        
+        # Write calibration values to ECU
+        # This would use actual OBD2 commands in production
+        calibration_results = connector.write_calibration_data({
+            'APS1_MIN': float(aps1_min),
+            'APS1_MAX': float(aps1_max),
+            'APS2_MIN': float(aps2_min),
+            'APS2_MAX': float(aps2_max)
+        })
+        
+        # Disconnect
+        connector.disconnect()
+        
+        return jsonify({
+            'success': True,
+            'results': calibration_results
+        })
+    except Exception as e:
+        app.logger.error(f"Error calibrating APS: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/obd2/results/<int:session_id>')
 def obd2_results(session_id):
     """Show the results of an OBD2 diagnostic scan."""

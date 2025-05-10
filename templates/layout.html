@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Automotive Diagnostic AI Assistant - Advanced vehicle diagnostics with AI-powered analysis">
-    <title>{% block title %}Automotive Diagnostic AI{% endblock %}</title>
+    <title>{% block title %}Automotive Diagnostic AI Assistant{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- Custom global styles -->
     <style>
         body {
             min-height: 100vh;
@@ -20,259 +18,280 @@
             flex-direction: column;
         }
         
-        .content-wrapper {
-            flex: 1;
+        .navbar-brand img {
+            height: 40px;
+            margin-right: 0.5rem;
         }
         
-        .app-navbar {
-            background-color: #1a1d21;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            border-bottom: 1px solid #2e343d;
-        }
-        
-        .app-navbar .navbar-brand {
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-        
-        .navbar-brand .brand-icon {
-            margin-right: 8px;
+        .navbar-nav .nav-link.active {
+            font-weight: 600;
             color: #17a2b8;
         }
         
-        .app-footer {
-            background-color: #1a1d21;
-            border-top: 1px solid #2e343d;
-            padding: 1.5rem 0;
-            font-size: 0.9rem;
+        .navbar-dark .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        
+        .navbar-dark .navbar-nav .nav-link:hover {
+            color: rgba(255, 255, 255, 0.95);
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        footer {
+            margin-top: auto;
+            padding: 2rem 0;
+            background-color: #232b36;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
         }
         
         .footer-links a {
             color: #adb5bd;
-            margin-right: 15px;
             text-decoration: none;
         }
         
         .footer-links a:hover {
-            color: #fff;
+            color: white;
             text-decoration: underline;
         }
         
-        .alert-box {
-            border-radius: 8px;
-            border-left: 4px solid;
+        .social-icons i {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            color: #adb5bd;
+            transition: color 0.2s;
         }
         
-        .alert-box.info {
+        .social-icons i:hover {
+            color: white;
+        }
+        
+        .navbar-toggler {
+            border: none;
+            outline: none !important;
+        }
+        
+        .dropdown-menu {
+            background-color: #2c3542;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .dropdown-item {
+            color: #e9ecef;
+        }
+        
+        .dropdown-item:hover, .dropdown-item:focus {
+            background-color: #232b36;
+            color: white;
+        }
+        
+        .btn-primary {
+            background-color: #17a2b8;
             border-color: #17a2b8;
-            background-color: rgba(23, 162, 184, 0.1);
         }
         
-        .alert-box.warning {
-            border-color: #ffc107;
-            background-color: rgba(255, 193, 7, 0.1);
+        .btn-primary:hover {
+            background-color: #138496;
+            border-color: #117a8b;
         }
         
-        .alert-box.danger {
-            border-color: #dc3545;
-            background-color: rgba(220, 53, 69, 0.1);
-        }
-        
-        .alert-box.success {
-            border-color: #28a745;
-            background-color: rgba(40, 167, 69, 0.1);
-        }
-        
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        
-        .loading-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(23, 162, 184, 0.3);
-            border-radius: 50%;
-            border-top-color: #17a2b8;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Custom badge styles */
-        .badge-info-outline {
+        .btn-outline-primary {
             color: #17a2b8;
-            background-color: transparent;
-            border: 1px solid #17a2b8;
+            border-color: #17a2b8;
         }
         
-        .badge-warning-outline {
-            color: #ffc107;
-            background-color: transparent;
-            border: 1px solid #ffc107;
-        }
-        
-        .badge-danger-outline {
-            color: #dc3545;
-            background-color: transparent;
-            border: 1px solid #dc3545;
-        }
-        
-        .badge-success-outline {
-            color: #28a745;
-            background-color: transparent;
-            border: 1px solid #28a745;
-        }
-        
-        /* For touch targets on mobile */
-        @media (max-width: 767.98px) {
-            .btn {
-                padding: 0.5rem 1rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            .navbar-nav .nav-link {
-                padding: 0.75rem 1rem;
-            }
-        }
-        
-        /* Print styles */
-        @media print {
-            .app-navbar, .app-footer, .no-print {
-                display: none !important;
-            }
-            
-            body {
-                background-color: white !important;
-                color: black !important;
-            }
-            
-            .content-wrapper {
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            
-            a[href]:after {
-                content: none !important;
-            }
+        .btn-outline-primary:hover {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
         }
     </style>
     
     {% block head %}{% endblock %}
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg app-navbar">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-car-mechanic brand-icon"></i> Automotive Diagnostic AI
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="fas fa-home me-1"></i> Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('diagnostic') }}"><i class="fas fa-camera me-1"></i> Visual Diagnostic</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('obd2_index') }}"><i class="fas fa-plug me-1"></i> OBD2 Diagnostic</a>
-                    </li>
-                </ul>
-                <div class="d-flex">
-                    <a href="{{ url_for('reset') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-power-off me-1"></i> Reset Session
-                    </a>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="{{ url_for('index') }}">
+                    <img src="https://cdn2.iconfinder.com/data/icons/car-service-2/256/Car_Service-12-512.png" alt="Logo">
+                    <span>Auto Diagnostic AI</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}" href="{{ url_for('index') }}">
+                                <i class="fas fa-home me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if '/obd2' in request.path %}active{% endif %}" href="#" id="diagDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-plug me-1"></i> OBD2 Diagnostics
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="diagDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('obd2_index') }}">OBD2 Home</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('obd2_connect') }}">Connect Vehicle</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('obd2_scan') }}">Diagnostic Scan</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('obd2_aps_calibration') }}">APS Calibration</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == url_for('diagnostic') %}active{% endif %}" href="{{ url_for('diagnostic') }}">
+                                <i class="fas fa-camera me-1"></i> Visual & Audio
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">
+                                <i class="fas fa-question-circle me-1"></i> Help
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
     
-    <!-- Main Content Container -->
-    <div class="content-wrapper py-4">
+    <main>
         {% block content %}{% endblock %}
-    </div>
+    </main>
     
-    <!-- Footer -->
-    <footer class="app-footer">
+    <footer>
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0">&copy; 2025 Automotive Diagnostic AI. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="footer-links">
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Terms of Service</a>
-                        <a href="#">Contact</a>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5>Auto Diagnostic AI</h5>
+                    <p class="text-muted">
+                        Advanced AI-powered vehicle diagnostics with direct OBD2 connection, visual analysis, and audio recognition.
+                    </p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
                     </div>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h5>Features</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('obd2_index') }}">OBD2 Diagnostics</a></li>
+                        <li><a href="{{ url_for('diagnostic') }}">Visual Analysis</a></li>
+                        <li><a href="{{ url_for('diagnostic') }}">Audio Analysis</a></li>
+                        <li><a href="{{ url_for('obd2_aps_calibration') }}">APS Calibration</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h5>Support</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">System Status</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>About</h5>
+                    <p class="text-muted">
+                        This application uses advanced AI technology powered by Anthropic's Claude to provide accurate vehicle diagnostics and repair recommendations.
+                    </p>
+                    <p class="text-muted small">
+                        &copy; 2025 Auto Diagnostic AI
+                    </p>
                 </div>
             </div>
         </div>
     </footer>
     
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">Need Help?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5>Quick Start Guide</h5>
+                    <ol>
+                        <li>Connect your OBD2-to-USB adapter to your vehicle and this device</li>
+                        <li>Enter your vehicle information (make, model, year)</li>
+                        <li>Run a diagnostic scan to identify problems</li>
+                        <li>Review AI-powered analysis and repair recommendations</li>
+                    </ol>
+                    
+                    <h5 class="mt-4">Frequently Asked Questions</h5>
+                    <div class="accordion" id="helpAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    What vehicles are compatible?
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    Most vehicles manufactured after 1996 are compatible with OBD2 standard. This includes cars, light trucks, and SUVs from major manufacturers like Toyota, Honda, Ford, Chevrolet, and more.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    What OBD2 adapter do I need?
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    You need an ELM327-based OBD2-to-USB cable. These are widely available online and in auto parts stores. Look for ELM327 v1.5 or v2.1 with USB connection for best compatibility.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    Can I use this to reset the check engine light?
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    Yes, you can clear diagnostic trouble codes (DTCs) using the "Clear DTCs" function in the dashboard. This will reset the check engine light, but if the problem still exists, the light may come back on after driving.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingFour">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                    What is APS calibration?
+                                </button>
+                            </h2>
+                            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#helpAccordion">
+                                <div class="accordion-body">
+                                    APS (Accelerator Pedal Position Sensor) calibration allows you to adjust how your vehicle's electronic throttle control system responds to pedal input. This can help fix issues with throttle response, idle quality, and acceleration behavior. This feature should only be used by qualified technicians or experienced DIY mechanics.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="#" class="btn btn-primary">View Documentation</a>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Global JavaScript -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Function to show loading overlay
-            window.showLoading = function() {
-                document.getElementById('loadingOverlay').classList.add('show');
-            };
-            
-            // Function to hide loading overlay
-            window.hideLoading = function() {
-                document.getElementById('loadingOverlay').classList.remove('show');
-            };
-            
-            // Add loading overlay for form submissions
-            const forms = document.querySelectorAll('form[data-loading="true"]');
-            forms.forEach(form => {
-                form.addEventListener('submit', function() {
-                    window.showLoading();
-                });
-            });
-            
-            // Add loading overlay for links with data-loading attribute
-            const loadingLinks = document.querySelectorAll('a[data-loading="true"]');
-            loadingLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    // Don't show loading if the link has href="#" or is a dropdown toggle
-                    if (this.getAttribute('href') !== '#' && !this.classList.contains('dropdown-toggle')) {
-                        window.showLoading();
-                    }
-                });
-            });
-        });
-    </script>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     
     {% block scripts %}{% endblock %}
 </body>

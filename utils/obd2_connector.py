@@ -1,404 +1,118 @@
 """
-OBD2 Connector Utility Module
-Provides functionality for connecting to a vehicle's OBD2 system via USB.
+OBD2 Connector Module
+This module provides functionality to connect to a vehicle's OBD2 port via USB cable
+and interact with the vehicle's ECU.
 """
 
 import logging
-import threading
+import random
 import time
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Union
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-
 class OBD2Connector:
-    """Class for establishing and managing OBD2 connections via USB."""
+    """
+    Class for connecting to a vehicle's OBD2 port via USB and interacting with its ECU.
+    This provides both real implementation and simulation capabilities for development.
+    """
     
-    def __init__(self, port: str = None, baudrate: int = 38400, timeout: float = 10.0):
+    def __init__(self, port: Optional[str] = None, simulate: bool = True):
         """
-        Initialize the OBD2Connector.
+        Initialize the OBD2 connector.
         
         Args:
-            port: Serial port to use (e.g., 'COM3' on Windows, '/dev/ttyUSB0' on Linux)
-            baudrate: Baud rate for communication (usually 38400 for ELM327)
-            timeout: Connection timeout in seconds
+            port: The serial port to connect to (e.g., 'COM3' on Windows, '/dev/ttyUSB0' on Linux)
+            simulate: Whether to simulate OBD2 connection (for development)
         """
         self.port = port
-        self.baudrate = baudrate
-        self.timeout = timeout
-        self.connection = None
+        self.simulate = simulate
         self.connected = False
+        self.connection_info = {}
+        self.supported_pids = []
+        
+        # Initialize connection parameters
         self.protocol = None
-        self.supported_pids = set()
-        self.is_scanning = False
-        self.last_error = None
+        self.ecu_name = None
+        self.vin = None
         
-        # Data storage
-        self.dtcs = []
-        self.sensor_data = {}
-        
-        # Holds the vehicle identification data
-        self.vehicle_info = {
-            'ecu_name': None,
-            'protocol': None,
-            'vin': None
-        }
+        logger.info(f"OBD2Connector initialized with port: {port}, simulate: {simulate}")
     
     def connect(self) -> bool:
         """
-        Establish connection to the vehicle's OBD2 system.
+        Connect to the vehicle's OBD2 port.
         
         Returns:
-            True if connection successful, False otherwise
+            True if connection is successful, False otherwise
         """
-        try:
-            # In a real implementation, this would use pyserial or similar to connect
-            # For demonstration, we'll simulate a connection
-            logger.info(f"Connecting to OBD2 on port {self.port}")
-            
-            # Simulate connection delay
-            time.sleep(0.5)
-            
-            # Simulate successful connection
+        if self.simulate:
+            logger.info("Simulating OBD2 connection")
+            time.sleep(0.5)  # Simulate connection delay
             self.connected = True
-            self.protocol = 'ISO 15765-4 (CAN)'
-            self.vehicle_info['protocol'] = self.protocol
-            self.vehicle_info['ecu_name'] = 'Engine Control Module'
+            self.protocol = "ISO 15765-4 (CAN)"
+            self.ecu_name = "Engine Control Module"
             
-            # Initialize supported PIDs (in a real implementation, these would be queried from the vehicle)
-            self._initialize_supported_pids()
+            # Simulate supported PIDs
+            self.supported_pids = [
+                "01", "03", "04", "05", "06", "07", "0C", "0D", "0E", "0F",
+                "10", "11", "13", "15", "1C", "1F", "20", "21", "22", "23",
+                "24", "30", "31", "33", "41", "42", "43", "44", "45", "46",
+                "47", "48", "49", "4A", "4B", "4C", "4D"
+            ]
             
-            logger.info(f"Connected to OBD2 system using protocol: {self.protocol}")
+            # In a real implementation, we'd query the vehicle for its VIN
+            self.vin = "1HGCM82633A123456"
+            
+            logger.info("Simulated OBD2 connection successful")
             return True
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error connecting to OBD2: {e}")
-            self.connected = False
-            return False
+        else:
+            try:
+                if not self.port:
+                    logger.error("No port specified for real OBD2 connection")
+                    return False
+                
+                # In a real implementation, we'd use a library like python-OBD or pyserial
+                # to establish a connection to the vehicle's OBD2 port
+                logger.info(f"Connecting to OBD2 port {self.port}")
+                
+                # This would be replaced with real connection code
+                time.sleep(1)
+                self.connected = True
+                
+                # Query protocol and ECU info
+                self.protocol = "Unknown"  # Would be queried from vehicle
+                self.ecu_name = "Unknown"  # Would be queried from vehicle
+                
+                # Query VIN
+                self.vin = None  # Would be queried from vehicle
+                
+                # Query supported PIDs
+                self.supported_pids = []  # Would be queried from vehicle
+                
+                logger.info(f"Connected to OBD2 port {self.port}")
+                return True
+            except Exception as e:
+                logger.error(f"Failed to connect to OBD2 port: {e}")
+                self.connected = False
+                return False
     
     def disconnect(self) -> bool:
         """
-        Disconnect from the vehicle's OBD2 system.
+        Disconnect from the vehicle's OBD2 port.
         
         Returns:
-            True if disconnection successful, False otherwise
+            True if disconnection is successful, False otherwise
         """
-        try:
-            # In a real implementation, this would close the serial connection
-            # For demonstration, we'll simulate disconnection
-            logger.info("Disconnecting from OBD2")
-            
-            # Simulate disconnection delay
-            time.sleep(0.2)
-            
+        if self.connected:
+            # In a real implementation, we'd close the serial connection
+            logger.info("Disconnecting from OBD2 port")
+            time.sleep(0.5)  # Simulate disconnection delay
             self.connected = False
             return True
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error disconnecting from OBD2: {e}")
+        else:
+            logger.warning("Already disconnected from OBD2 port")
             return False
-    
-    def scan_for_dtcs(self) -> List[Dict[str, Any]]:
-        """
-        Scan for Diagnostic Trouble Codes (DTCs).
-        
-        Returns:
-            List of DTCs with code, description, and type
-        """
-        if not self.connected:
-            logger.error("Cannot scan for DTCs: Not connected to OBD2")
-            return []
-        
-        try:
-            self.is_scanning = True
-            
-            # In a real implementation, this would send commands to the vehicle
-            # For demonstration, we'll simulate DTC scanning
-            logger.info("Scanning for DTCs...")
-            
-            # Simulate scanning delay
-            time.sleep(1.0)
-            
-            # Simulate finding DTCs (in a real implementation, these would come from the vehicle)
-            dtcs = [
-                {
-                    'code': 'P0301',
-                    'description': 'Cylinder 1 Misfire Detected',
-                    'type': 'stored',
-                    'severity': 'high'
-                },
-                {
-                    'code': 'P0420',
-                    'description': 'Catalyst System Efficiency Below Threshold (Bank 1)',
-                    'type': 'stored',
-                    'severity': 'medium'
-                },
-                {
-                    'code': 'P0171',
-                    'description': 'System Too Lean (Bank 1)',
-                    'type': 'stored',
-                    'severity': 'medium'
-                }
-            ]
-            
-            self.dtcs = dtcs
-            self.is_scanning = False
-            logger.info(f"Found {len(dtcs)} DTCs")
-            return dtcs
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error scanning for DTCs: {e}")
-            self.is_scanning = False
-            return []
-    
-    def clear_dtcs(self) -> bool:
-        """
-        Clear all DTCs and turn off the check engine light.
-        
-        Returns:
-            True if DTCs cleared successfully, False otherwise
-        """
-        if not self.connected:
-            logger.error("Cannot clear DTCs: Not connected to OBD2")
-            return False
-        
-        try:
-            # In a real implementation, this would send the clear DTCs command
-            # For demonstration, we'll simulate clearing
-            logger.info("Clearing DTCs...")
-            
-            # Simulate clearing delay
-            time.sleep(0.5)
-            
-            # Clear the DTCs list
-            self.dtcs = []
-            logger.info("DTCs cleared successfully")
-            return True
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error clearing DTCs: {e}")
-            return False
-    
-    def read_vin(self) -> Optional[str]:
-        """
-        Read the Vehicle Identification Number (VIN).
-        
-        Returns:
-            VIN string or None if not available
-        """
-        if not self.connected:
-            logger.error("Cannot read VIN: Not connected to OBD2")
-            return None
-        
-        try:
-            # In a real implementation, this would query the VIN from the vehicle
-            # For demonstration, we'll return a simulated VIN
-            logger.info("Reading VIN...")
-            
-            # Simulate reading delay
-            time.sleep(0.3)
-            
-            # Simulated VIN
-            vin = "1HGCM82633A123456"
-            self.vehicle_info['vin'] = vin
-            return vin
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error reading VIN: {e}")
-            return None
-    
-    def read_live_data(self) -> Dict[str, Any]:
-        """
-        Read live sensor data from the vehicle.
-        
-        Returns:
-            Dictionary of sensor data
-        """
-        if not self.connected:
-            logger.error("Cannot read live data: Not connected to OBD2")
-            return {}
-        
-        try:
-            # In a real implementation, this would query various PIDs
-            # For demonstration, we'll return simulated data
-            logger.info("Reading live sensor data...")
-            
-            # Simulate reading delay
-            time.sleep(0.5)
-            
-            # Simulate reading various sensors
-            data = {
-                'rpm': self._simulate_sensor_value(800, 900),  # RPM
-                'speed': self._simulate_sensor_value(0, 5),  # km/h
-                'coolant_temp': self._simulate_sensor_value(85, 95),  # °C
-                'intake_temp': self._simulate_sensor_value(20, 30),  # °C
-                'maf': self._simulate_sensor_value(10, 15),  # g/s
-                'throttle_pos': self._simulate_sensor_value(15, 20),  # %
-                'engine_load': self._simulate_sensor_value(20, 30),  # %
-                'timing_advance': self._simulate_sensor_value(8, 12),  # °
-                'fuel_pressure': self._simulate_sensor_value(375, 385),  # kPa
-                'fuel_level': self._simulate_sensor_value(70, 80),  # %
-                'o2_voltage': self._simulate_sensor_value(0.8, 0.9),  # V
-                'barometric_pressure': self._simulate_sensor_value(100, 102)  # kPa
-            }
-            
-            # Add units
-            units = {
-                'rpm': 'RPM',
-                'speed': 'km/h',
-                'coolant_temp': '°C',
-                'intake_temp': '°C',
-                'maf': 'g/s',
-                'throttle_pos': '%',
-                'engine_load': '%',
-                'timing_advance': '°',
-                'fuel_pressure': 'kPa',
-                'fuel_level': '%',
-                'o2_voltage': 'V',
-                'barometric_pressure': 'kPa'
-            }
-            
-            # Create formatted output
-            formatted_data = {}
-            for key, value in data.items():
-                formatted_data[key] = {
-                    'value': value,
-                    'unit': units.get(key, '')
-                }
-            
-            self.sensor_data = formatted_data
-            return formatted_data
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error reading live data: {e}")
-            return {}
-    
-    def read_freeze_frame_data(self, dtc_code: str) -> Dict[str, Any]:
-        """
-        Read freeze frame data for a specific DTC.
-        
-        Args:
-            dtc_code: The DTC code to get freeze frame data for (e.g., 'P0301')
-            
-        Returns:
-            Dictionary of freeze frame data
-        """
-        if not self.connected:
-            logger.error("Cannot read freeze frame data: Not connected to OBD2")
-            return {}
-        
-        try:
-            # In a real implementation, this would query freeze frame data for the DTC
-            # For demonstration, we'll return simulated data
-            logger.info(f"Reading freeze frame data for DTC {dtc_code}...")
-            
-            # Simulate reading delay
-            time.sleep(0.7)
-            
-            # Simulated freeze frame data (dependent on the DTC)
-            if dtc_code == 'P0301':  # Cylinder 1 misfire
-                data = {
-                    'rpm': 2150,
-                    'speed': 45,
-                    'engine_load': 62,
-                    'coolant_temp': 85,
-                    'short_term_fuel_trim': 10.5,
-                    'long_term_fuel_trim': 8.2,
-                    'intake_temp': 22,
-                    'timing_advance': 15.5
-                }
-            elif dtc_code == 'P0420':  # Catalyst efficiency
-                data = {
-                    'rpm': 1850,
-                    'speed': 65,
-                    'engine_load': 48,
-                    'coolant_temp': 89,
-                    'o2_voltage_b1s1': 0.75,
-                    'o2_voltage_b1s2': 0.65,
-                    'short_term_fuel_trim': 5.2,
-                    'long_term_fuel_trim': 7.1
-                }
-            else:
-                data = {
-                    'rpm': self._simulate_sensor_value(1500, 2500),
-                    'speed': self._simulate_sensor_value(30, 70),
-                    'engine_load': self._simulate_sensor_value(40, 60),
-                    'coolant_temp': self._simulate_sensor_value(80, 90)
-                }
-            
-            return data
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error reading freeze frame data: {e}")
-            return {}
-    
-    def start_continuous_monitoring(self, callback, interval: float = 0.5) -> bool:
-        """
-        Start continuous monitoring of live data.
-        
-        Args:
-            callback: Function to call with each data update
-            interval: Update interval in seconds
-            
-        Returns:
-            True if monitoring started successfully, False otherwise
-        """
-        if not self.connected:
-            logger.error("Cannot start monitoring: Not connected to OBD2")
-            return False
-        
-        try:
-            # Start monitoring in a separate thread
-            self.monitoring_active = True
-            self.monitoring_thread = threading.Thread(
-                target=self._monitoring_loop,
-                args=(callback, interval),
-                daemon=True
-            )
-            self.monitoring_thread.start()
-            logger.info(f"Started continuous monitoring with interval {interval}s")
-            return True
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error starting continuous monitoring: {e}")
-            return False
-    
-    def stop_continuous_monitoring(self) -> bool:
-        """
-        Stop continuous monitoring of live data.
-        
-        Returns:
-            True if monitoring stopped successfully, False otherwise
-        """
-        try:
-            self.monitoring_active = False
-            if hasattr(self, 'monitoring_thread') and self.monitoring_thread.is_alive():
-                self.monitoring_thread.join(timeout=2.0)
-            logger.info("Stopped continuous monitoring")
-            return True
-            
-        except Exception as e:
-            self.last_error = str(e)
-            logger.error(f"Error stopping continuous monitoring: {e}")
-            return False
-    
-    def get_supported_pids(self) -> List[str]:
-        """
-        Get a list of supported Parameter IDs (PIDs).
-        
-        Returns:
-            List of supported PID strings
-        """
-        return list(self.supported_pids)
     
     def get_connection_status(self) -> Dict[str, Any]:
         """
@@ -407,91 +121,379 @@ class OBD2Connector:
         Returns:
             Dictionary with connection status information
         """
-        return {
-            'connected': self.connected,
-            'port': self.port,
-            'protocol': self.protocol,
-            'last_error': self.last_error,
-            'is_scanning': self.is_scanning,
-            'vehicle_info': self.vehicle_info
+        status = {
+            "connected": self.connected,
+            "port": self.port,
+            "protocol": self.protocol,
+            "vehicle_info": {
+                "ecu_name": self.ecu_name,
+                "vin": self.vin,
+                "supported_pids": len(self.supported_pids)
+            }
         }
+        
+        return status
     
-    def scan_for_ports(self) -> List[Dict[str, str]]:
+    def scan_for_ports(self) -> List[str]:
         """
-        Scan for available serial ports that might be OBD2 adapters.
+        Scan for available OBD2 ports.
         
         Returns:
-            List of dictionaries with port information
+            List of available ports
         """
-        # In a real implementation, this would use pyserial to list ports
-        # For demonstration, we'll return simulated ports
-        ports = [
-            {'id': 'USB0', 'name': 'OBD2 Adapter (COM3)', 'type': 'ELM327'},
-            {'id': 'USB1', 'name': 'Serial Device (COM4)', 'type': 'Unknown'}
-        ]
-        return ports
+        if self.simulate:
+            # Simulate available ports
+            logger.info("Simulating port scan")
+            time.sleep(1)  # Simulate scan delay
+            
+            # On Windows, ports would be like 'COM1', 'COM2', etc.
+            # On Linux, ports would be like '/dev/ttyUSB0', '/dev/ttyACM0', etc.
+            if random.random() < 0.5:
+                # Simulate Windows ports
+                return ["COM1", "COM3", "COM8"]
+            else:
+                # Simulate Linux ports
+                return ["/dev/ttyUSB0", "/dev/ttyACM0"]
+        else:
+            # In a real implementation, we'd use a library like pyserial to scan for ports
+            logger.info("Scanning for OBD2 ports")
+            
+            # This would be replaced with real port scanning code
+            time.sleep(1)
+            
+            # Return empty list if no ports found
+            return []
     
-    def _monitoring_loop(self, callback, interval: float):
+    def scan_for_dtcs(self) -> List[Dict[str, str]]:
         """
-        Internal function for the continuous monitoring loop.
+        Scan for Diagnostic Trouble Codes (DTCs).
+        
+        Returns:
+            List of DTCs with code, description, and type
+        """
+        if not self.connected:
+            logger.error("Not connected to OBD2 port")
+            return []
+        
+        if self.simulate:
+            logger.info("Simulating DTC scan")
+            time.sleep(1.5)  # Simulate scan delay
+            
+            # Simulate some DTCs
+            dtcs = []
+            
+            # Randomly decide to have DTCs or not
+            if random.random() < 0.7:  # 70% chance of having DTCs
+                # Generate a random number of DTCs (1-3)
+                num_dtcs = random.randint(1, 3)
+                
+                # Potential DTC codes and descriptions
+                potential_dtcs = [
+                    {"code": "P0300", "description": "Random/Multiple Cylinder Misfire Detected", "type": "stored"},
+                    {"code": "P0171", "description": "Fuel System Too Lean (Bank 1)", "type": "stored"},
+                    {"code": "P0174", "description": "Fuel System Too Lean (Bank 2)", "type": "stored"},
+                    {"code": "P0420", "description": "Catalyst System Efficiency Below Threshold (Bank 1)", "type": "stored"},
+                    {"code": "P0442", "description": "Evaporative Emission Control System Leak Detected (Small Leak)", "type": "pending"},
+                    {"code": "P0456", "description": "Evaporative Emission Control System Leak Detected (Very Small Leak)", "type": "pending"},
+                    {"code": "P0401", "description": "Exhaust Gas Recirculation Flow Insufficient Detected", "type": "stored"},
+                    {"code": "P0113", "description": "Intake Air Temperature Circuit High Input", "type": "stored"},
+                    {"code": "P0131", "description": "O2 Sensor Circuit Low Voltage (Bank 1, Sensor 1)", "type": "stored"}
+                ]
+                
+                # Randomly select DTCs
+                for _ in range(min(num_dtcs, len(potential_dtcs))):
+                    if potential_dtcs:
+                        dtc = potential_dtcs.pop(random.randint(0, len(potential_dtcs) - 1))
+                        dtcs.append(dtc)
+            
+            logger.info(f"Simulated DTC scan found {len(dtcs)} DTCs")
+            return dtcs
+        else:
+            # In a real implementation, we'd query the vehicle for DTCs
+            logger.info("Scanning for DTCs")
+            
+            # This would be replaced with real DTC scanning code
+            time.sleep(1.5)
+            
+            # Return empty list if no DTCs found
+            return []
+    
+    def clear_dtcs(self) -> bool:
+        """
+        Clear all Diagnostic Trouble Codes (DTCs).
+        
+        Returns:
+            True if DTCs were cleared successfully, False otherwise
+        """
+        if not self.connected:
+            logger.error("Not connected to OBD2 port")
+            return False
+        
+        if self.simulate:
+            logger.info("Simulating DTC clear")
+            time.sleep(1)  # Simulate clear delay
+            logger.info("Simulated DTC clear successful")
+            return True
+        else:
+            # In a real implementation, we'd send a command to clear DTCs
+            logger.info("Clearing DTCs")
+            
+            # This would be replaced with real DTC clearing code
+            time.sleep(1)
+            
+            return True
+    
+    def read_live_data(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Read live data from the vehicle's sensors.
+        
+        Returns:
+            Dictionary with sensor data (PID -> value)
+        """
+        if not self.connected:
+            logger.error("Not connected to OBD2 port")
+            return {}
+        
+        if self.simulate:
+            logger.info("Simulating live data read")
+            
+            # Simulate sensor data
+            sensor_data = {
+                "RPM": {
+                    "value": round(random.uniform(700, 900), 1),
+                    "unit": "rpm",
+                    "name": "Engine RPM"
+                },
+                "SPEED": {
+                    "value": 0,
+                    "unit": "km/h",
+                    "name": "Vehicle Speed"
+                },
+                "COOLANT_TEMP": {
+                    "value": round(random.uniform(80, 95), 1),
+                    "unit": "°C",
+                    "name": "Engine Coolant Temperature"
+                },
+                "INTAKE_TEMP": {
+                    "value": round(random.uniform(20, 30), 1),
+                    "unit": "°C",
+                    "name": "Intake Air Temperature"
+                },
+                "MAF": {
+                    "value": round(random.uniform(8, 15), 2),
+                    "unit": "g/s",
+                    "name": "Mass Air Flow"
+                },
+                "THROTTLE_POS": {
+                    "value": round(random.uniform(15, 20), 1),
+                    "unit": "%",
+                    "name": "Throttle Position"
+                },
+                "FUEL_LEVEL": {
+                    "value": round(random.uniform(40, 80), 1),
+                    "unit": "%",
+                    "name": "Fuel Level"
+                },
+                "FUEL_PRESSURE": {
+                    "value": round(random.uniform(380, 420), 1),
+                    "unit": "kPa",
+                    "name": "Fuel Pressure"
+                },
+                "OIL_TEMP": {
+                    "value": round(random.uniform(70, 90), 1),
+                    "unit": "°C",
+                    "name": "Engine Oil Temperature"
+                },
+                "VOLTAGE": {
+                    "value": round(random.uniform(13.8, 14.2), 2),
+                    "unit": "V",
+                    "name": "Battery Voltage"
+                },
+                "APS1": {
+                    "value": round(random.uniform(0.8, 0.85), 2),
+                    "unit": "V",
+                    "name": "Accelerator Pedal Position Sensor 1"
+                },
+                "APS2": {
+                    "value": round(random.uniform(0.4, 0.45), 2),
+                    "unit": "V",
+                    "name": "Accelerator Pedal Position Sensor 2"
+                }
+            }
+            
+            logger.info("Simulated live data read successful")
+            return sensor_data
+        else:
+            # In a real implementation, we'd query the vehicle for live data
+            logger.info("Reading live data")
+            
+            # This would be replaced with real live data reading code
+            time.sleep(0.5)
+            
+            # Return empty dict if no data available
+            return {}
+    
+    def read_sensor_data(self, pids: List[str]) -> Dict[str, Dict[str, Any]]:
+        """
+        Read specific sensor data from the vehicle.
         
         Args:
-            callback: Function to call with each data update
-            interval: Update interval in seconds
-        """
-        while self.monitoring_active and self.connected:
-            try:
-                data = self.read_live_data()
-                callback(data)
-                time.sleep(interval)
-            except Exception as e:
-                logger.error(f"Error in monitoring loop: {e}")
-                time.sleep(interval)
-    
-    def _initialize_supported_pids(self):
-        """Initialize the set of supported PIDs."""
-        # In a real implementation, we would query the vehicle for supported PIDs
-        # For demonstration, we'll add commonly supported PIDs
-        self.supported_pids = {
-            '0100',  # Supported PIDs [01-20]
-            '010C',  # Engine RPM
-            '010D',  # Vehicle Speed
-            '0105',  # Engine Coolant Temperature
-            '010F',  # Intake Air Temperature
-            '0110',  # MAF Air Flow Rate
-            '0111',  # Throttle Position
-            '0104',  # Engine Load
-            '010E',  # Timing Advance
-            '010A',  # Fuel Pressure
-            '012F',  # Fuel Level
-            '0114',  # O2 Sensor Voltage
-            '0133',  # Barometric Pressure
-        }
-    
-    def _simulate_sensor_value(self, min_value: float, max_value: float) -> float:
-        """
-        Generate a simulated sensor value within a range.
-        
-        Args:
-            min_value: Minimum value
-            max_value: Maximum value
+            pids: List of PIDs to read
             
         Returns:
-            Simulated sensor value
+            Dictionary with sensor data (PID -> value)
         """
-        import random
-        return round(random.uniform(min_value, max_value), 1)
+        if not self.connected:
+            logger.error("Not connected to OBD2 port")
+            return {}
+        
+        if self.simulate:
+            logger.info(f"Simulating sensor data read for PIDs: {pids}")
+            
+            # Simulate sensor data
+            sensor_data = {}
+            
+            for pid in pids:
+                if pid == "APS1":
+                    sensor_data[pid] = {
+                        "value": round(random.uniform(0.8, 0.85), 2),
+                        "unit": "V",
+                        "name": "Accelerator Pedal Position Sensor 1"
+                    }
+                elif pid == "APS2":
+                    sensor_data[pid] = {
+                        "value": round(random.uniform(0.4, 0.45), 2),
+                        "unit": "V",
+                        "name": "Accelerator Pedal Position Sensor 2"
+                    }
+                elif pid == "RPM":
+                    sensor_data[pid] = {
+                        "value": round(random.uniform(700, 900), 1),
+                        "unit": "rpm",
+                        "name": "Engine RPM"
+                    }
+                elif pid == "SPEED":
+                    sensor_data[pid] = {
+                        "value": 0,
+                        "unit": "km/h",
+                        "name": "Vehicle Speed"
+                    }
+                elif pid == "COOLANT_TEMP":
+                    sensor_data[pid] = {
+                        "value": round(random.uniform(80, 95), 1),
+                        "unit": "°C",
+                        "name": "Engine Coolant Temperature"
+                    }
+            
+            logger.info("Simulated sensor data read successful")
+            return sensor_data
+        else:
+            # In a real implementation, we'd query the vehicle for sensor data
+            logger.info(f"Reading sensor data for PIDs: {pids}")
+            
+            # This would be replaced with real sensor data reading code
+            time.sleep(0.5)
+            
+            # Return empty dict if no data available
+            return {}
+    
+    def write_calibration_data(self, calibration_data: Dict[str, float]) -> Dict[str, Any]:
+        """
+        Write calibration data to the vehicle's ECU.
+        This is used to adjust parameters like APS calibration.
+        
+        Args:
+            calibration_data: Dictionary with calibration values (parameter -> value)
+            
+        Returns:
+            Dictionary with results of the calibration
+        """
+        if not self.connected:
+            logger.error("Not connected to OBD2 port")
+            return {"success": False, "error": "Not connected to OBD2 port"}
+        
+        if self.simulate:
+            logger.info(f"Simulating calibration write: {calibration_data}")
+            time.sleep(1.5)  # Simulate write delay
+            
+            # Simulate successful write
+            results = {
+                "success": True,
+                "values_written": calibration_data,
+                "message": "Calibration values successfully written to ECU"
+            }
+            
+            logger.info("Simulated calibration write successful")
+            return results
+        else:
+            # In a real implementation, we'd write calibration data to the vehicle's ECU
+            logger.info(f"Writing calibration data: {calibration_data}")
+            
+            # This would be replaced with real calibration writing code
+            time.sleep(1.5)
+            
+            # Return failure if write not successful
+            return {"success": False, "error": "Write not implemented for real hardware"}
+    
+    def get_freeze_frame_data(self, dtc_code: str) -> Dict[str, Any]:
+        """
+        Get freeze frame data for a specific DTC.
+        
+        Args:
+            dtc_code: The DTC code to get freeze frame data for
+            
+        Returns:
+            Dictionary with freeze frame data
+        """
+        if not self.connected:
+            logger.error("Not connected to OBD2 port")
+            return {}
+        
+        if self.simulate:
+            logger.info(f"Simulating freeze frame data read for DTC: {dtc_code}")
+            time.sleep(1)  # Simulate read delay
+            
+            # Simulate freeze frame data
+            freeze_frame = {
+                "RPM": round(random.uniform(1200, 2500), 0),
+                "SPEED": round(random.uniform(35, 70), 0),
+                "COOLANT_TEMP": round(random.uniform(80, 105), 1),
+                "THROTTLE_POS": round(random.uniform(20, 50), 1),
+                "LOAD": round(random.uniform(30, 70), 1),
+                "SHORT_FUEL_TRIM_1": round(random.uniform(-10, 10), 1),
+                "LONG_FUEL_TRIM_1": round(random.uniform(-10, 10), 1),
+                "INTAKE_PRESSURE": round(random.uniform(80, 105), 1),
+                "TIMING_ADVANCE": round(random.uniform(5, 15), 1),
+                "TIMESTAMP": "2025-05-10 08:37:15"
+            }
+            
+            logger.info("Simulated freeze frame data read successful")
+            return freeze_frame
+        else:
+            # In a real implementation, we'd query the vehicle for freeze frame data
+            logger.info(f"Reading freeze frame data for DTC: {dtc_code}")
+            
+            # This would be replaced with real freeze frame data reading code
+            time.sleep(1)
+            
+            # Return empty dict if no data available
+            return {}
 
 
-# Factory function to create an OBD2Connector
-def create_obd2_connector(port: str = None) -> OBD2Connector:
+def create_obd2_connector(port: Optional[str] = None) -> OBD2Connector:
     """
-    Create and return an OBD2Connector instance.
+    Factory function to create an OBD2Connector instance.
     
     Args:
-        port: Serial port to use
+        port: The serial port to connect to
         
     Returns:
-        OBD2Connector instance
+        An OBD2Connector instance
     """
-    return OBD2Connector(port=port)
+    # Check if we're in a testing environment
+    # In production, we'd detect if we're running on hardware that can actually connect to a vehicle
+    simulate = True
+    
+    # For now, we'll always simulate
+    logger.info(f"Creating OBD2Connector with port: {port}, simulate: {simulate}")
+    return OBD2Connector(port=port, simulate=simulate)
