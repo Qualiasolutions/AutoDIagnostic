@@ -1,0 +1,647 @@
+{% extends "layout.html" %}
+
+{% block title %}OBD2 Diagnostic Scan{% endblock %}
+
+{% block head %}
+<style>
+    .scan-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .scan-header {
+        margin-bottom: 30px;
+    }
+    
+    .progress-container {
+        margin-bottom: 30px;
+    }
+    
+    .scan-progress {
+        height: 25px;
+        margin-bottom: 15px;
+    }
+    
+    .progress-label {
+        font-size: 14px;
+        color: #adb5bd;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    .scan-status {
+        background-color: #2c3542;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .scan-status-title {
+        margin-bottom: 15px;
+        color: #17a2b8;
+    }
+    
+    .status-item {
+        display: flex;
+        align-items: baseline;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #3a4655;
+    }
+    
+    .status-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .status-indicator {
+        margin-right: 15px;
+        font-size: 18px;
+    }
+    
+    .status-indicator.pending {
+        color: #adb5bd;
+    }
+    
+    .status-indicator.in-progress {
+        color: #ffc107;
+        animation: pulse 1s infinite;
+    }
+    
+    .status-indicator.completed {
+        color: #28a745;
+    }
+    
+    .status-indicator.error {
+        color: #dc3545;
+    }
+    
+    .status-content {
+        flex-grow: 1;
+    }
+    
+    .status-title {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    
+    .status-description {
+        font-size: 14px;
+        color: #adb5bd;
+        margin-bottom: 0;
+    }
+    
+    .scan-details {
+        background-color: #2c3542;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .vehicle-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .vehicle-icon {
+        font-size: 40px;
+        margin-right: 20px;
+        color: #17a2b8;
+    }
+    
+    .dtc-list {
+        margin-top: 20px;
+    }
+    
+    .dtc-item {
+        background-color: #343e50;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid;
+    }
+    
+    .dtc-item.critical {
+        border-color: #dc3545;
+    }
+    
+    .dtc-item.high {
+        border-color: #fd7e14;
+    }
+    
+    .dtc-item.medium {
+        border-color: #ffc107;
+    }
+    
+    .dtc-item.low {
+        border-color: #28a745;
+    }
+    
+    .dtc-code {
+        font-family: monospace;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    
+    .dtc-description {
+        margin-top: 5px;
+    }
+    
+    .dtc-severity {
+        float: right;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    
+    .dtc-severity.critical {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+    
+    .dtc-severity.high {
+        background-color: rgba(253, 126, 20, 0.2);
+        color: #fd7e14;
+    }
+    
+    .dtc-severity.medium {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+    
+    .dtc-severity.low {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+    
+    .freeze-frame-data {
+        margin-top: 30px;
+    }
+    
+    .freeze-frame-title {
+        margin-bottom: 15px;
+        color: #17a2b8;
+    }
+    
+    .sensor-readings {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .sensor-item {
+        background-color: #343e50;
+        border-radius: 8px;
+        padding: 15px;
+    }
+    
+    .sensor-name {
+        font-size: 14px;
+        color: #adb5bd;
+        margin-bottom: 5px;
+    }
+    
+    .sensor-value {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    
+    .sensor-unit {
+        font-size: 12px;
+        color: #adb5bd;
+        margin-left: 5px;
+    }
+    
+    .action-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .scan-result-box {
+        text-align: center;
+        padding: 30px;
+        background-color: #2c3542;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    
+    .result-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+    
+    .result-icon.success {
+        color: #28a745;
+    }
+    
+    .result-icon.warning {
+        color: #ffc107;
+    }
+    
+    .result-icon.danger {
+        color: #dc3545;
+    }
+    
+    .loading-wheel {
+        display: inline-block;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 20px;
+    }
+    
+    .loading-wheel:after {
+        content: " ";
+        display: block;
+        width: 46px;
+        height: 46px;
+        margin: 1px;
+        border-radius: 50%;
+        border: 5px solid #17a2b8;
+        border-color: #17a2b8 transparent #17a2b8 transparent;
+        animation: loading-wheel 1.2s linear infinite;
+    }
+    
+    @keyframes loading-wheel {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row scan-header">
+        <div class="col-md-8">
+            <h1><i class="fas fa-search me-2"></i> OBD2 Diagnostic Scan</h1>
+            <p class="text-muted">Scanning your vehicle for diagnostic trouble codes and sensor data.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('obd2_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <div class="scan-panel">
+        <!-- Main progress indicator -->
+        <div class="progress-container">
+            <div class="progress-label">
+                <span>Scan Progress</span>
+                <span id="progress-percentage">0%</span>
+            </div>
+            <div class="progress scan-progress">
+                <div id="main-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+        
+        <!-- Scan status list -->
+        <div class="scan-status">
+            <h3 class="scan-status-title">Scan Status</h3>
+            
+            <div class="status-item">
+                <div class="status-indicator completed" id="connection-indicator">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="status-content">
+                    <h4 class="status-title">Connection Established</h4>
+                    <p class="status-description" id="connection-status">Successfully connected to vehicle's OBD system.</p>
+                </div>
+            </div>
+            
+            <div class="status-item">
+                <div class="status-indicator in-progress" id="protocol-indicator">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="status-content">
+                    <h4 class="status-title">Detecting Protocol</h4>
+                    <p class="status-description" id="protocol-status">Determining the communication protocol used by your vehicle...</p>
+                </div>
+            </div>
+            
+            <div class="status-item">
+                <div class="status-indicator pending" id="dtc-indicator">
+                    <i class="fas fa-circle"></i>
+                </div>
+                <div class="status-content">
+                    <h4 class="status-title">Reading Trouble Codes</h4>
+                    <p class="status-description" id="dtc-status">Waiting to read diagnostic trouble codes...</p>
+                </div>
+            </div>
+            
+            <div class="status-item">
+                <div class="status-indicator pending" id="sensor-indicator">
+                    <i class="fas fa-circle"></i>
+                </div>
+                <div class="status-content">
+                    <h4 class="status-title">Reading Sensor Data</h4>
+                    <p class="status-description" id="sensor-status">Waiting to read sensor data...</p>
+                </div>
+            </div>
+            
+            <div class="status-item">
+                <div class="status-indicator pending" id="analysis-indicator">
+                    <i class="fas fa-circle"></i>
+                </div>
+                <div class="status-content">
+                    <h4 class="status-title">Analyzing Results</h4>
+                    <p class="status-description" id="analysis-status">Waiting to analyze diagnostic data...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scan results section (initially hidden) -->
+        <div id="scan-results" style="display: none;">
+            <div class="scan-result-box">
+                <div class="result-icon warning" id="result-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h2 id="result-title">Issues Detected</h2>
+                <p class="lead" id="result-description">Your vehicle has diagnostic trouble codes that may require attention.</p>
+                <div class="mt-4">
+                    <a href="#dtc-section" class="btn btn-info me-2">
+                        <i class="fas fa-list me-2"></i> View Trouble Codes
+                    </a>
+                    <a href="{{ url_for('obd2_results', session_id=session_id) }}" class="btn btn-primary">
+                        <i class="fas fa-clipboard-check me-2"></i> View Full Diagnostic Report
+                    </a>
+                </div>
+            </div>
+            
+            <!-- DTC Results Section -->
+            <div id="dtc-section">
+                <h3><i class="fas fa-exclamation-triangle me-2"></i> Diagnostic Trouble Codes</h3>
+                <div class="dtc-list" id="dtc-list">
+                    <!-- DTC items will be populated dynamically -->
+                </div>
+                
+                <!-- No DTCs found message -->
+                <div id="no-dtcs-message" class="alert alert-success" style="display: none;">
+                    <i class="fas fa-check-circle me-2"></i> No diagnostic trouble codes were found. Your vehicle's computer is not reporting any errors.
+                </div>
+            </div>
+            
+            <!-- Sensor Data Section -->
+            <div id="sensor-data-section" style="margin-top: 30px;">
+                <h3><i class="fas fa-microchip me-2"></i> Sensor Data</h3>
+                <div class="sensor-readings" id="sensor-readings">
+                    <!-- Sensor items will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading indicator (initially shown) -->
+        <div id="loading-section" class="text-center mt-4">
+            <div class="loading-wheel"></div>
+            <p class="lead" id="loading-message">Scanning vehicle systems...</p>
+            <p class="text-muted">This process may take a few moments. Please wait while we communicate with your vehicle's computer system.</p>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="action-buttons" id="action-buttons" style="display: none;">
+            <a href="{{ url_for('obd2_results', session_id=session_id) }}" class="btn btn-primary btn-lg me-2">
+                <i class="fas fa-clipboard-check me-2"></i> View Full Diagnostic Report
+            </a>
+            <a href="{{ url_for('obd2_dashboard') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-tachometer-alt me-2"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Simulation timing variables
+        const simulationDuration = 8000; // 8 seconds for the full scan
+        const updateInterval = 200; // Update progress every 200ms
+        
+        // Progress bar and status elements
+        const mainProgressBar = document.getElementById('main-progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        
+        // Status indicators
+        const indicators = {
+            protocol: {
+                indicator: document.getElementById('protocol-indicator'),
+                status: document.getElementById('protocol-status')
+            },
+            dtc: {
+                indicator: document.getElementById('dtc-indicator'),
+                status: document.getElementById('dtc-status')
+            },
+            sensor: {
+                indicator: document.getElementById('sensor-indicator'),
+                status: document.getElementById('sensor-status')
+            },
+            analysis: {
+                indicator: document.getElementById('analysis-indicator'),
+                status: document.getElementById('analysis-status')
+            }
+        };
+        
+        // Sections
+        const loadingSection = document.getElementById('loading-section');
+        const loadingMessage = document.getElementById('loading-message');
+        const scanResults = document.getElementById('scan-results');
+        const actionButtons = document.getElementById('action-buttons');
+        
+        // DTC and sensor result elements
+        const dtcList = document.getElementById('dtc-list');
+        const noDtcsMessage = document.getElementById('no-dtcs-message');
+        const sensorReadings = document.getElementById('sensor-readings');
+        
+        // Result indicators
+        const resultIcon = document.getElementById('result-icon');
+        const resultTitle = document.getElementById('result-title');
+        const resultDescription = document.getElementById('result-description');
+        
+        // Start time
+        const startTime = Date.now();
+        
+        // Sample DTCs for simulation
+        const sampleDtcs = [
+            {
+                code: 'P0301',
+                description: 'Cylinder 1 Misfire Detected',
+                severity: 'high'
+            },
+            {
+                code: 'P0420',
+                description: 'Catalyst System Efficiency Below Threshold (Bank 1)',
+                severity: 'medium'
+            },
+            {
+                code: 'P0171',
+                description: 'System Too Lean (Bank 1)',
+                severity: 'medium'
+            }
+        ];
+        
+        // Sample sensor data for simulation
+        const sampleSensors = [
+            { name: 'Engine RPM', value: '843', unit: 'RPM' },
+            { name: 'Vehicle Speed', value: '0', unit: 'km/h' },
+            { name: 'Coolant Temperature', value: '89', unit: '°C' },
+            { name: 'Intake Air Temperature', value: '24', unit: '°C' },
+            { name: 'MAF Air Flow Rate', value: '11.2', unit: 'g/s' },
+            { name: 'Throttle Position', value: '17', unit: '%' },
+            { name: 'Oxygen Sensor Voltage', value: '0.85', unit: 'V' },
+            { name: 'Fuel Pressure', value: '380', unit: 'kPa' },
+            { name: 'Fuel Level', value: '76', unit: '%' },
+            { name: 'Barometric Pressure', value: '101', unit: 'kPa' },
+            { name: 'Catalyst Temperature', value: '423', unit: '°C' },
+            { name: 'Control Module Voltage', value: '14.2', unit: 'V' }
+        ];
+        
+        // Update function that runs on an interval
+        const updateIntervalId = setInterval(function() {
+            // Calculate progress
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(100, Math.floor((elapsed / simulationDuration) * 100));
+            
+            // Update main progress bar
+            mainProgressBar.style.width = `${progress}%`;
+            mainProgressBar.setAttribute('aria-valuenow', progress);
+            progressPercentage.textContent = `${progress}%`;
+            
+            // Update status indicators based on progress
+            if (progress >= 15) {
+                // Protocol detection completed
+                updateStatus(indicators.protocol, 'completed', 'Protocol detected: ISO 15765-4 (CAN)');
+                indicators.dtc.indicator.classList.remove('pending');
+                indicators.dtc.indicator.classList.add('in-progress');
+                indicators.dtc.indicator.innerHTML = '<i class="fas fa-spinner"></i>';
+                indicators.dtc.status.textContent = 'Reading diagnostic trouble codes...';
+            }
+            
+            if (progress >= 40) {
+                // DTC reading completed
+                updateStatus(indicators.dtc, 'completed', 'Found 3 diagnostic trouble codes');
+                indicators.sensor.indicator.classList.remove('pending');
+                indicators.sensor.indicator.classList.add('in-progress');
+                indicators.sensor.indicator.innerHTML = '<i class="fas fa-spinner"></i>';
+                indicators.sensor.status.textContent = 'Reading sensor data from vehicle...';
+            }
+            
+            if (progress >= 65) {
+                // Sensor reading completed
+                updateStatus(indicators.sensor, 'completed', 'Successfully read data from 12 sensors');
+                indicators.analysis.indicator.classList.remove('pending');
+                indicators.analysis.indicator.classList.add('in-progress');
+                indicators.analysis.indicator.innerHTML = '<i class="fas fa-spinner"></i>';
+                indicators.analysis.status.textContent = 'Analyzing diagnostic data with AI...';
+            }
+            
+            if (progress >= 90) {
+                // Analysis completed
+                updateStatus(indicators.analysis, 'completed', 'Analysis complete - 3 issues identified');
+                loadingMessage.textContent = 'Scan completed successfully!';
+            }
+            
+            if (progress >= 100) {
+                // Scan completed
+                clearInterval(updateIntervalId);
+                completeScan();
+            }
+        }, updateInterval);
+        
+        // Update a status indicator
+        function updateStatus(statusObj, state, message) {
+            // Remove existing classes
+            statusObj.indicator.classList.remove('pending', 'in-progress', 'completed', 'error');
+            
+            // Add new class and icon
+            statusObj.indicator.classList.add(state);
+            if (state === 'completed') {
+                statusObj.indicator.innerHTML = '<i class="fas fa-check-circle"></i>';
+            } else if (state === 'error') {
+                statusObj.indicator.innerHTML = '<i class="fas fa-times-circle"></i>';
+            }
+            
+            // Update status message
+            statusObj.status.textContent = message;
+        }
+        
+        // Complete the scan and show results
+        function completeScan() {
+            // Hide loading section
+            loadingSection.style.display = 'none';
+            
+            // Show results and action buttons
+            scanResults.style.display = 'block';
+            actionButtons.style.display = 'block';
+            
+            // Add DTCs to the list
+            if (sampleDtcs.length > 0) {
+                sampleDtcs.forEach(dtc => {
+                    dtcList.innerHTML += `
+                        <div class="dtc-item ${dtc.severity}">
+                            <span class="dtc-severity ${dtc.severity}">${dtc.severity}</span>
+                            <div class="dtc-code">${dtc.code}</div>
+                            <div class="dtc-description">${dtc.description}</div>
+                        </div>
+                    `;
+                });
+                
+                // Set result icon and text based on severity
+                const highSeverityDtcs = sampleDtcs.filter(dtc => dtc.severity === 'critical' || dtc.severity === 'high');
+                
+                if (highSeverityDtcs.length > 0) {
+                    resultIcon.className = 'result-icon danger';
+                    resultIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                    resultTitle.textContent = 'Critical Issues Detected';
+                    resultDescription.textContent = 'Your vehicle has urgent issues that should be addressed immediately.';
+                } else {
+                    resultIcon.className = 'result-icon warning';
+                    resultIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    resultTitle.textContent = 'Issues Detected';
+                    resultDescription.textContent = 'Your vehicle has some issues that should be addressed.';
+                }
+            } else {
+                // No DTCs found
+                noDtcsMessage.style.display = 'block';
+                
+                resultIcon.className = 'result-icon success';
+                resultIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                resultTitle.textContent = 'No Issues Detected';
+                resultDescription.textContent = 'Your vehicle has no diagnostic trouble codes. All systems appear to be functioning normally.';
+            }
+            
+            // Add sensor readings
+            sampleSensors.forEach(sensor => {
+                sensorReadings.innerHTML += `
+                    <div class="sensor-item">
+                        <div class="sensor-name">${sensor.name}</div>
+                        <div class="sensor-value">${sensor.value}<span class="sensor-unit">${sensor.unit}</span></div>
+                    </div>
+                `;
+            });
+            
+            // In a real application, we would be sending the scan data to the server at this point
+            // To simulate server communication, we'll add a slight delay and then redirect to results
+            setTimeout(() => {
+                // This redirect would normally happen automatically when the server processes the data
+                // window.location.href = "/obd2/results/" + sessionId;
+                
+                // Instead of redirecting, we'll just show the results on this page for demonstration
+                console.log('Scan complete - results ready to view');
+            }, 500);
+        }
+    });
+</script>
+{% endblock %}

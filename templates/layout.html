@@ -3,111 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Automotive Diagnostic AI Assistant{% endblock %}</title>
+    <meta name="description" content="Automotive Diagnostic AI Assistant - Advanced vehicle diagnostics with AI-powered analysis">
+    <title>{% block title %}Automotive Diagnostic AI{% endblock %}</title>
     
-    <!-- Bootstrap 5 CSS -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Custom CSS -->
+    <!-- Custom global styles -->
     <style>
-        /* Custom styling for automotive theme */
-        .navbar-brand img {
-            height: 40px;
-            margin-right: 10px;
-        }
-        
-        .card {
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card-header {
-            font-weight: 600;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-        }
-        
-        /* Styling for the OBD2 dashboard */
-        .sensor-value {
-            font-weight: bold;
-            line-height: 1.2;
-        }
-        
-        /* Custom footer */
-        .footer {
-            padding: 20px 0;
-            margin-top: 40px;
-        }
-        
-        /* Custom styling for the mobile camera interface */
-        .camera-container {
-            position: relative;
-            width: 100%;
-            max-width: 640px;
-            margin: 0 auto;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .camera-feed {
-            width: 100%;
-            height: auto;
-            display: block;
-            background-color: #333;
-            border-radius: 8px;
-        }
-        
-        .camera-controls {
-            margin-top: 15px;
+        body {
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            flex-direction: column;
         }
         
-        /* Recording button animation */
-        .recording-btn {
-            position: relative;
+        .content-wrapper {
+            flex: 1;
         }
         
-        .recording-btn.active::after {
-            content: '';
-            position: absolute;
+        .app-navbar {
+            background-color: #1a1d21;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid #2e343d;
+        }
+        
+        .app-navbar .navbar-brand {
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        
+        .navbar-brand .brand-icon {
+            margin-right: 8px;
+            color: #17a2b8;
+        }
+        
+        .app-footer {
+            background-color: #1a1d21;
+            border-top: 1px solid #2e343d;
+            padding: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .footer-links a {
+            color: #adb5bd;
+            margin-right: 15px;
+            text-decoration: none;
+        }
+        
+        .footer-links a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+        
+        .alert-box {
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .alert-box.info {
+            border-color: #17a2b8;
+            background-color: rgba(23, 162, 184, 0.1);
+        }
+        
+        .alert-box.warning {
+            border-color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        
+        .alert-box.danger {
+            border-color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+        
+        .alert-box.success {
+            border-color: #28a745;
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+        
+        .loading-overlay {
+            position: fixed;
             top: 0;
-            right: 0;
-            width: 12px;
-            height: 12px;
-            background-color: red;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(23, 162, 184, 0.3);
             border-radius: 50%;
-            animation: blink 1s infinite;
+            border-top-color: #17a2b8;
+            animation: spin 1s ease-in-out infinite;
         }
         
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0; }
-            100% { opacity: 1; }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
-        /* Mobile responsive adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding-left: 15px;
-                padding-right: 15px;
+        /* Custom badge styles */
+        .badge-info-outline {
+            color: #17a2b8;
+            background-color: transparent;
+            border: 1px solid #17a2b8;
+        }
+        
+        .badge-warning-outline {
+            color: #ffc107;
+            background-color: transparent;
+            border: 1px solid #ffc107;
+        }
+        
+        .badge-danger-outline {
+            color: #dc3545;
+            background-color: transparent;
+            border: 1px solid #dc3545;
+        }
+        
+        .badge-success-outline {
+            color: #28a745;
+            background-color: transparent;
+            border: 1px solid #28a745;
+        }
+        
+        /* For touch targets on mobile */
+        @media (max-width: 767.98px) {
+            .btn {
+                padding: 0.5rem 1rem;
+                margin-bottom: 0.5rem;
             }
             
-            h1 {
-                font-size: 1.8rem;
+            .navbar-nav .nav-link {
+                padding: 0.75rem 1rem;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            .app-navbar, .app-footer, .no-print {
+                display: none !important;
             }
             
-            h2 {
-                font-size: 1.5rem;
+            body {
+                background-color: white !important;
+                color: black !important;
             }
             
-            .camera-container {
-                max-width: 100%;
+            .content-wrapper {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            a[href]:after {
+                content: none !important;
             }
         }
     </style>
@@ -115,57 +179,101 @@
     {% block head %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg app-navbar">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-car-mechanic fa-2x me-2"></i>
-                Auto Diagnostic AI
+                <i class="fas fa-car-mechanic brand-icon"></i> Automotive Diagnostic AI
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarMain">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="/"><i class="fas fa-home me-1"></i> Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('obd2_index') }}"><i class="fas fa-plug me-1"></i> OBD2 Diagnostics</a>
+                        <a class="nav-link" href="{{ url_for('diagnostic') }}"><i class="fas fa-camera me-1"></i> Visual Diagnostic</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('diagnostic') }}"><i class="fas fa-camera me-1"></i> Visual Diagnostics</a>
+                        <a class="nav-link" href="{{ url_for('obd2_index') }}"><i class="fas fa-plug me-1"></i> OBD2 Diagnostic</a>
                     </li>
                 </ul>
+                <div class="d-flex">
+                    <a href="{{ url_for('reset') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-power-off me-1"></i> Reset Session
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
     
-    <!-- Main Content -->
-    <main class="container">
+    <!-- Main Content Container -->
+    <div class="content-wrapper py-4">
         {% block content %}{% endblock %}
-    </main>
+    </div>
     
     <!-- Footer -->
-    <footer class="footer bg-dark text-light">
+    <footer class="app-footer">
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Automotive Diagnostic AI Assistant</h5>
-                    <p>Advanced vehicle diagnostics powered by artificial intelligence</p>
+                    <p class="mb-0">&copy; 2025 Automotive Diagnostic AI. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p>&copy; 2025 Auto Diagnostic AI</p>
-                    <p class="text-muted small">Version 1.0.0</p>
+                    <div class="footer-links">
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Contact</a>
+                    </div>
                 </div>
             </div>
         </div>
     </footer>
     
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
     
-    <!-- Custom JavaScript -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Global JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to show loading overlay
+            window.showLoading = function() {
+                document.getElementById('loadingOverlay').classList.add('show');
+            };
+            
+            // Function to hide loading overlay
+            window.hideLoading = function() {
+                document.getElementById('loadingOverlay').classList.remove('show');
+            };
+            
+            // Add loading overlay for form submissions
+            const forms = document.querySelectorAll('form[data-loading="true"]');
+            forms.forEach(form => {
+                form.addEventListener('submit', function() {
+                    window.showLoading();
+                });
+            });
+            
+            // Add loading overlay for links with data-loading attribute
+            const loadingLinks = document.querySelectorAll('a[data-loading="true"]');
+            loadingLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Don't show loading if the link has href="#" or is a dropdown toggle
+                    if (this.getAttribute('href') !== '#' && !this.classList.contains('dropdown-toggle')) {
+                        window.showLoading();
+                    }
+                });
+            });
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

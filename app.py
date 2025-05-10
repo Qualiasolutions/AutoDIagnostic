@@ -143,7 +143,7 @@ def results():
                            analysis_results=analysis_results,
                            vehicle_info=vehicle_info)
 
-@app.route('/reset', methods=['POST'])
+@app.route('/reset', methods=['GET', 'POST'])
 def reset():
     """Reset the diagnostic session."""
     session.clear()
@@ -213,110 +213,192 @@ def obd2_dashboard():
     if not vehicle:
         return redirect(url_for('obd2_connect'))
     
-    return render_template('obd2/dashboard.html', vehicle=vehicle)
+    # Get diagnostic sessions for this vehicle
+    from models import OBDDiagnosticSession
+    diagnostic_sessions = OBDDiagnosticSession.query.filter_by(vehicle_id=vehicle_id).order_by(OBDDiagnosticSession.started_at.desc()).all()
+    
+    return render_template('obd2/dashboard.html', 
+                          vehicle_info=vehicle,
+                          diagnostic_sessions=diagnostic_sessions,
+                          session=vehicle)
 
-@app.route('/obd2/scan', methods=['POST'])
+@app.route('/obd2/scan', methods=['GET', 'POST'])
 def obd2_scan():
     """Start an OBD2 diagnostic scan."""
+    if request.method == 'GET':
+        # Render the scan page
+        if 'vehicle_id' not in session:
+            return redirect(url_for('obd2_connect'))
+        
+        vehicle_id = session['vehicle_id']
+        
+        # Get vehicle from database
+        from models import Vehicle
+        vehicle = Vehicle.query.get(vehicle_id)
+        
+        if not vehicle:
+            return redirect(url_for('obd2_connect'))
+        
+        # Check if we have a session ID in the regular session
+        session_id = session.get('obd_session_id')
+        
+        return render_template('obd2/scan.html', 
+                              vehicle_info=vehicle, 
+                              session_id=session_id)
+    elif request.method == 'POST':
+        if 'vehicle_id' not in session:
+            return jsonify({'error': 'No vehicle selected'}), 400
+        
+        vehicle_id = session['vehicle_id']
+        
+        # Get USB connection parameters
+        port = request.form.get('port')
+        
+        try:
+            # Import the OBD2 connector
+            from utils.obd2_connector import create_obd2_connector
+            
+            # Create a new diagnostic session
+            from models import OBDDiagnosticSession
+            
+            session_obj = OBDDiagnosticSession(
+                vehicle_id=vehicle_id,
+                connection_type='USB',
+                notes='Initiated from web interface'
+            )
+            db.session.add(session_obj)
+            db.session.commit()
+            
+            # Store session ID in session
+            session['obd_session_id'] = session_obj.id
+            
+            # Initialize connection (this would be async in production)
+            # For demo purposes, we're doing it synchronously
+            connector = create_obd2_connector(port=port)
+            connection_success = connector.connect()
+            
+            if not connection_success:
+                session_obj.success = False
+                session_obj.notes = 'Failed to connect to vehicle'
+                db.session.commit()
+                return jsonify({'error': 'Could not connect to vehicle OBD port'}), 500
+            
+            # Get vehicle info from OBD
+            connection_status = connector.get_connection_status()
+            vehicle_info = connection_status.get('vehicle_info', {})
+            
+            # Update vehicle in database
+            from models import Vehicle
+            vehicle = Vehicle.query.get(vehicle_id)
+            if vehicle and vehicle_info:
+                if vehicle_info.get('vin'):
+                    vehicle.vin = vehicle_info.get('vin')
+                if vehicle_info.get('ecu_name'):
+                    vehicle.ecu_name = vehicle_info.get('ecu_name')
+                if vehicle_info.get('protocol'):
+                    vehicle.protocol = vehicle_info.get('protocol')
+                db.session.commit()
+            
+            # Get DTCs
+            dtcs = connector.scan_for_dtcs()
+            
+            # Store DTCs in database
+            from models import DiagnosticTroubleCode
+            for dtc in dtcs:
+                dtc_obj = DiagnosticTroubleCode(
+                    session_id=session_obj.id,
+                    code=dtc.get('code', 'Unknown'),
+                    description=dtc.get('description', ''),
+                    type=dtc.get('type', 'stored')
+                )
+                db.session.add(dtc_obj)
+            
+            # Get sensor data
+            sensor_data = connector.read_live_data()
+            
+            # Store sensor readings in database
+            from models import SensorReading
+            for key, data in sensor_data.items():
+                if data.get('value') is not None:
+                    reading = SensorReading(
+                        session_id=session_obj.id,
+                        pid=key,
+                        name=key,
+                        value=float(data.get('value')),
+                        unit=data.get('unit', ''),
+                        raw_response=str(data)
+                    )
+                    db.session.add(reading)
+            
+            # Mark session as successful
+            session_obj.success = True
+            session_obj.notes = f"Successfully scanned vehicle: {len(dtcs)} DTCs, {len(sensor_data)} sensors"
+            db.session.commit()
+            
+            # Disconnect from vehicle
+            connector.disconnect()
+            
+            # Return success
+            return jsonify({
+                'success': True, 
+                'session_id': session_obj.id,
+                'dtc_count': len(dtcs),
+                'sensor_count': len(sensor_data)
+            })
+        
+        except Exception as e:
+            app.logger.error(f"Error during OBD2 scan: {str(e)}")
+            return jsonify({'error': f'Error during scan: {str(e)}'}), 500
+
+@app.route('/api/obd2/scan-ports', methods=['GET'])
+def api_scan_ports():
+    """API endpoint to scan for available OBD2 ports."""
+    try:
+        # Import the OBD2 connector
+        from utils.obd2_connector import create_obd2_connector
+        
+        # Create a connector without specifying a port
+        connector = create_obd2_connector()
+        
+        # Scan for ports
+        ports = connector.scan_for_ports()
+        
+        return jsonify({'success': True, 'ports': ports})
+    except Exception as e:
+        app.logger.error(f"Error scanning for ports: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/obd2/clear-dtcs', methods=['POST'])
+def api_clear_dtcs():
+    """API endpoint to clear diagnostic trouble codes."""
     if 'vehicle_id' not in session:
         return jsonify({'error': 'No vehicle selected'}), 400
     
-    vehicle_id = session['vehicle_id']
-    
-    # Get USB connection parameters
-    port = request.form.get('port')
-    
     try:
         # Import the OBD2 connector
-        from utils.obd2_connector import OBD2Connector
+        from utils.obd2_connector import create_obd2_connector
         
-        # Create a new diagnostic session
-        from models import OBDDiagnosticSession
+        # Create a connector
+        connector = create_obd2_connector()
         
-        session_obj = OBDDiagnosticSession(
-            vehicle_id=vehicle_id,
-            connection_type='USB',
-            notes='Initiated from web interface'
-        )
-        db.session.add(session_obj)
-        db.session.commit()
-        
-        # Store session ID in session
-        session['obd_session_id'] = session_obj.id
-        
-        # Initialize connection (this would be async in production)
-        # For demo purposes, we're doing it synchronously
-        connector = OBD2Connector(port=port)
+        # Connect to vehicle
         connection_success = connector.connect()
-        
         if not connection_success:
-            session_obj.success = False
-            session_obj.notes = 'Failed to connect to vehicle'
-            db.session.commit()
-            return jsonify({'error': 'Could not connect to vehicle OBD port'}), 500
+            return jsonify({'error': 'Could not connect to vehicle'}), 500
         
-        # Get vehicle info from OBD
-        vehicle_info = connector.get_vehicle_info()
+        # Clear DTCs
+        success = connector.clear_dtcs()
         
-        # Update vehicle in database
-        from models import Vehicle
-        vehicle = Vehicle.query.get(vehicle_id)
-        if vehicle and vehicle_info:
-            vehicle.vin = vehicle_info.get('vin', vehicle.vin)
-            vehicle.ecu_name = vehicle_info.get('ecu_name', vehicle.ecu_name)
-            vehicle.protocol = vehicle_info.get('protocol', vehicle.protocol)
-            db.session.commit()
-        
-        # Get DTCs
-        dtcs = connector.read_dtcs()
-        
-        # Store DTCs in database
-        from models import DiagnosticTroubleCode
-        for dtc in dtcs:
-            dtc_obj = DiagnosticTroubleCode(
-                session_id=session_obj.id,
-                code=dtc.get('code', 'Unknown'),
-                description=dtc.get('description', ''),
-                type=dtc.get('type', 'stored')
-            )
-            db.session.add(dtc_obj)
-        
-        # Get sensor data
-        sensor_data = connector.read_all_sensor_data()
-        
-        # Store sensor readings in database
-        from models import SensorReading
-        for pid, data in sensor_data.items():
-            if data.get('value') is not None:
-                reading = SensorReading(
-                    session_id=session_obj.id,
-                    pid=pid,
-                    name=data.get('name', pid),
-                    value=data.get('value'),
-                    unit=data.get('unit', ''),
-                    raw_response=data.get('raw_response', '')
-                )
-                db.session.add(reading)
-        
-        # Mark session as successful
-        session_obj.success = True
-        session_obj.notes = f"Successfully scanned vehicle: {len(dtcs)} DTCs, {len(sensor_data)} sensors"
-        db.session.commit()
-        
-        # Disconnect from vehicle
+        # Disconnect
         connector.disconnect()
         
-        # Return success
-        return jsonify({
-            'success': True, 
-            'session_id': session_obj.id,
-            'dtc_count': len(dtcs),
-            'sensor_count': len(sensor_data)
-        })
-    
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'error': 'Failed to clear DTCs'}), 500
     except Exception as e:
-        app.logger.error(f"Error during OBD2 scan: {str(e)}")
-        return jsonify({'error': f'Error during scan: {str(e)}'}), 500
+        app.logger.error(f"Error clearing DTCs: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/obd2/results/<int:session_id>')
 def obd2_results(session_id):
@@ -336,7 +418,7 @@ def obd2_results(session_id):
     sensor_readings = SensorReading.query.filter_by(session_id=session_id).all()
     
     # If we have DTCs, analyze them with AI
-    dtc_analysis = None
+    results = {}
     if dtcs:
         try:
             # Import the AI module
@@ -345,29 +427,31 @@ def obd2_results(session_id):
             # Convert DTCs to format expected by AI
             dtc_list = [{'code': dtc.code, 'description': dtc.description, 'type': dtc.type} for dtc in dtcs]
             
-            # Get vehicle info
-            vehicle_info = {
-                'make': vehicle.make,
-                'model': vehicle.model,
-                'year': vehicle.year,
-                'mileage': vehicle.mileage,
-                'vin': vehicle.vin
-            }
-            
-            # Create AI instance and analyze
-            ai = DiagnosticAI()
-            dtc_analysis = ai.analyze_dtcs(dtc_list, vehicle_info)
+            # Only proceed if vehicle is not None
+            if vehicle:
+                # Get vehicle info
+                vehicle_info = {
+                    'make': vehicle.make,
+                    'model': vehicle.model,
+                    'year': vehicle.year,
+                    'mileage': vehicle.mileage,
+                    'vin': vehicle.vin if vehicle.vin else None
+                }
+                
+                # Create AI instance and analyze
+                ai = DiagnosticAI(use_openai=False, use_anthropic=True)
+                results = ai.analyze_dtcs(dtc_list, vehicle_info)
         except Exception as e:
             app.logger.error(f"Error analyzing DTCs: {str(e)}")
-            dtc_analysis = None
+            results = {}
     
     return render_template(
         'obd2/results.html',
         session=session_obj,
-        vehicle=vehicle,
+        vehicle_info=vehicle,
         dtcs=dtcs,
         sensor_readings=sensor_readings,
-        dtc_analysis=dtc_analysis
+        results=results
     )
 
 # Initialize the database tables
