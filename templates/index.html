@@ -2,122 +2,274 @@
 
 {% block title %}Automotive Diagnostic AI Assistant{% endblock %}
 
+{% block head %}
+<style>
+    .hero-container {
+        padding: 4rem 0;
+        background-color: #232b36;
+        border-radius: 8px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 3rem;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 40%;
+        background-image: url('https://cdn2.iconfinder.com/data/icons/car-service-2/256/Car_Service-12-512.png');
+        background-repeat: no-repeat;
+        background-position: center right;
+        background-size: contain;
+        opacity: 0.1;
+        z-index: 0;
+    }
+    
+    .hero-heading {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    
+    .hero-subheading {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        max-width: 80%;
+    }
+    
+    .feature-card {
+        background-color: #232b36;
+        border-radius: 8px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .feature-icon {
+        font-size: 40px;
+        height: 80px;
+        width: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+    
+    .feature-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-text {
+        font-size: 0.95rem;
+        color: #adb5bd;
+    }
+    
+    .feature-card-body {
+        padding: 1.5rem;
+    }
+    
+    .feature-image-container {
+        height: 160px;
+        overflow: hidden;
+    }
+    
+    .feature-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .cta-section {
+        padding: 3rem 0;
+        background-color: #232b36;
+        border-radius: 8px;
+        text-align: center;
+        margin: 3rem 0;
+    }
+    
+    .cta-heading {
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+    }
+    
+    .cta-text {
+        margin-bottom: 2rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .get-started-section {
+        padding: 2rem;
+        background-color: #232b36;
+        border-radius: 8px;
+    }
+    
+    .car-form {
+        background-color: #2c3542;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+
+    @media (max-width: 768px) {
+        .hero-overlay {
+            opacity: 0.05;
+            width: 100%;
+        }
+        
+        .hero-subheading {
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h1 class="mb-0"><i class="fas fa-car"></i> Automotive Diagnostic AI Assistant</h1>
+<!-- Hero Section -->
+<div class="hero-container">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 hero-content">
+                <h1 class="hero-heading">Smart Vehicle Diagnostics Powered by AI</h1>
+                <p class="hero-subheading">Diagnose your vehicle issues with advanced AI technology. Connect directly to your car's OBD2 port, or use your camera and microphone to capture problems.</p>
+                <div class="d-flex flex-wrap">
+                    <a href="{{ url_for('obd2_index') }}" class="btn btn-primary btn-lg me-2 mb-2">
+                        <i class="fas fa-plug me-2"></i> OBD2 Diagnostics
+                    </a>
+                    <a href="#get-started" class="btn btn-outline-secondary btn-lg mb-2">
+                        <i class="fas fa-info-circle me-2"></i> Learn More
+                    </a>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="text-center mb-5">
-                    <h2>Your Intelligent Diagnostics Partner</h2>
-                    <p class="lead">
-                        Get professional-level diagnostics and repair recommendations for your vehicle using cutting-edge 
-                        artificial intelligence technology.
-                    </p>
+        </div>
+    </div>
+    <div class="hero-overlay"></div>
+</div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <div class="text-center mb-5">
+        <h2>Complete Diagnostic Solutions</h2>
+        <p class="text-muted">Multiple ways to diagnose and troubleshoot your vehicle</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://cdn4.iconfinder.com/data/icons/car-maintenance-2/64/car-service-diagnostics-tool-vehicle-512.png" class="feature-image" alt="OBD2 Diagnostics">
                 </div>
-                
-                <div class="row mb-5">
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-header bg-info text-white">
-                                <h3 class="mb-0"><i class="fas fa-plug me-2"></i> OBD2 Diagnostics</h3>
-                            </div>
-                            <div class="card-body">
-                                <p>Connect directly to your vehicle's OBD2 port using a USB cable to read trouble codes and sensor data.</p>
-                                <ul>
-                                    <li>Read and analyze diagnostic trouble codes (DTCs)</li>
-                                    <li>Monitor real-time sensor data</li>
-                                    <li>Get AI-powered repair recommendations</li>
-                                    <li>Access comprehensive repair guides</li>
-                                </ul>
-                                <div class="text-center mt-auto">
-                                    <a href="{{ url_for('obd2_index') }}" class="btn btn-primary btn-lg px-4">
-                                        <i class="fas fa-tools me-2"></i> Start OBD2 Diagnostics
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                <div class="feature-card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-plug"></i>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card h-100">
-                            <div class="card-header bg-success text-white">
-                                <h3 class="mb-0"><i class="fas fa-camera me-2"></i> Visual & Voice Diagnostics</h3>
-                            </div>
-                            <div class="card-body">
-                                <p>Use your camera and microphone to diagnose problems without specialized equipment.</p>
-                                <ul>
-                                    <li>Take photos of vehicle components</li>
-                                    <li>Record engine sounds and noises</li>
-                                    <li>Get visual analysis of problems</li>
-                                    <li>Identify issues using acoustic analysis</li>
-                                </ul>
-                                <div class="text-center mt-auto">
-                                    <a href="{{ url_for('diagnostic') }}" class="btn btn-primary btn-lg px-4">
-                                        <i class="fas fa-microphone-alt me-2"></i> Start Visual Diagnostics
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <h3 class="feature-title">OBD2 Diagnostics</h3>
+                    <p class="feature-text">Connect directly to your vehicle's OBD2 port with a USB cable to read diagnostic trouble codes, sensor data, and get real-time metrics.</p>
+                    <a href="{{ url_for('obd2_index') }}" class="btn btn-outline-info mt-3">Connect OBD2</a>
                 </div>
-                
-                <div class="row mb-5">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="mb-0"><i class="fas fa-brain me-2"></i> Powered by Advanced AI</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-md-6">
-                                        <p>Our diagnostic system uses state-of-the-art artificial intelligence to analyze:</p>
-                                        <ul>
-                                            <li>Vehicle diagnostic trouble codes</li>
-                                            <li>Sensor data and performance metrics</li>
-                                            <li>Visual symptoms from images</li>
-                                            <li>Acoustic signatures from engine noises</li>
-                                        </ul>
-                                        <p>The AI cross-references this data with a vast database of vehicle problems and solutions to provide accurate diagnostics and repair recommendations.</p>
-                                    </div>
-                                    <div class="col-md-6 text-center">
-                                        <img src="https://cdn.pixabay.com/photo/2018/09/18/11/19/artificial-intelligence-3685928_960_720.png" alt="AI Diagnostics" class="img-fluid rounded" style="max-width: 300px;">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://cdn4.iconfinder.com/data/icons/car-maintenance-2/64/car-service-mechanic-vehicle-repair-512.png" class="feature-image" alt="Visual Inspection">
                 </div>
-                
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card text-center h-100">
-                            <div class="card-body">
-                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                                <h4>Accurate Diagnosis</h4>
-                                <p>Get precise diagnosis of vehicle issues with our multi-source analysis approach.</p>
+                <div class="feature-card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3 class="feature-title">Visual Diagnostics</h3>
+                    <p class="feature-text">Use your device's camera to capture images of vehicle problems. Our AI will analyze the visuals and identify potential issues.</p>
+                    <a href="{{ url_for('diagnostic') }}" class="btn btn-outline-info mt-3">Visual Diagnosis</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-image-container">
+                    <img src="https://cdn1.iconfinder.com/data/icons/car-engine-dashboard-lights/237/dashboard-car-alarm-engine-256.png" class="feature-image" alt="Audio Diagnostics">
+                </div>
+                <div class="feature-card-body text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <h3 class="feature-title">Audio Diagnostics</h3>
+                    <p class="feature-text">Record unusual sounds from your vehicle. Our advanced AI will analyze the audio to help identify the source of the noise.</p>
+                    <a href="{{ url_for('diagnostic') }}" class="btn btn-outline-info mt-3">Audio Diagnosis</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="cta-section">
+    <div class="container">
+        <h2 class="cta-heading">AI-Powered Diagnostic Technology</h2>
+        <p class="cta-text">Our application combines advanced OBD2 diagnostics with Anthropic's Claude AI to provide accurate analysis and actionable repair recommendations for your vehicle.</p>
+        <a href="{{ url_for('obd2_index') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-stethoscope me-2"></i> Start Diagnosing
+        </a>
+    </div>
+</div>
+
+<!-- Get Started Section -->
+<div class="container" id="get-started">
+    <div class="get-started-section">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="mb-4">Get Started With Your Vehicle</h2>
+                <p class="mb-4">Enter your vehicle information below to begin the diagnostic process. This helps us provide more accurate results tailored to your specific car model.</p>
+                <ul class="list-unstyled">
+                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Personalized diagnostics for your vehicle</li>
+                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> More accurate repair recommendations</li>
+                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Better cost estimates for needed repairs</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <div class="car-form">
+                    <form action="{{ url_for('vehicle_info') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="make" class="form-label">Vehicle Make</label>
+                            <input type="text" class="form-control" id="make" name="make" placeholder="e.g., Toyota, Ford, Honda" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="model" class="form-label">Vehicle Model</label>
+                            <input type="text" class="form-control" id="model" name="model" placeholder="e.g., Camry, F-150, Civic" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="year" class="form-label">Year</label>
+                                <input type="number" class="form-control" id="year" name="year" min="1980" max="2025" placeholder="e.g., 2018" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="mileage" class="form-label">Mileage (optional)</label>
+                                <input type="number" class="form-control" id="mileage" name="mileage" min="0" placeholder="e.g., 45000">
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-center h-100">
-                            <div class="card-body">
-                                <i class="fas fa-tools fa-3x text-primary mb-3"></i>
-                                <h4>Detailed Repair Guides</h4>
-                                <p>Follow step-by-step repair instructions tailored to your specific vehicle and issues.</p>
-                            </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-arrow-right me-2"></i> Continue
+                            </button>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-center h-100">
-                            <div class="card-body">
-                                <i class="fas fa-dollar-sign fa-3x text-info mb-3"></i>
-                                <h4>Save Money</h4>
-                                <p>Avoid unnecessary repairs and parts replacement with targeted diagnostics.</p>
-                            </div>
-                        </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
