@@ -1,0 +1,486 @@
+{% extends "layout.html" %}
+
+{% block title %}OBD2 Dashboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-11">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="mb-0"><i class="fas fa-tachometer-alt"></i> OBD2 Dashboard</h1>
+                    <div>
+                        <span class="badge bg-success" id="connection-status">Connected</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Vehicle Information</h3>
+                            </div>
+                            <div class="card-body">
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width: 30%">Make:</th>
+                                            <td>{{ vehicle.make }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Model:</th>
+                                            <td>{{ vehicle.model }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Year:</th>
+                                            <td>{{ vehicle.year }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Mileage:</th>
+                                            <td>{{ vehicle.mileage|default('N/A', true) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>VIN:</th>
+                                            <td id="vehicle-vin">{{ vehicle.vin|default('Pending scan...', true) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>ECU:</th>
+                                            <td id="vehicle-ecu">{{ vehicle.ecu_name|default('Pending scan...', true) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Protocol:</th>
+                                            <td id="vehicle-protocol">{{ vehicle.protocol|default('Pending scan...', true) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Diagnostic Tools</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <button id="scan-btn" class="btn btn-primary w-100 h-100 py-3">
+                                            <i class="fas fa-search fa-2x mb-2"></i><br>
+                                            Scan for Trouble Codes
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <button id="live-data-btn" class="btn btn-info w-100 h-100 py-3">
+                                            <i class="fas fa-chart-line fa-2x mb-2"></i><br>
+                                            View Live Data
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <button id="clear-codes-btn" class="btn btn-warning w-100 h-100 py-3" disabled>
+                                            <i class="fas fa-eraser fa-2x mb-2"></i><br>
+                                            Clear Trouble Codes
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <button id="disconnect-btn" class="btn btn-danger w-100 h-100 py-3">
+                                            <i class="fas fa-power-off fa-2x mb-2"></i><br>
+                                            Disconnect
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h3>Live Sensor Data</h3>
+                                    <span class="badge bg-secondary" id="update-status">Not running</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="sensor-data-loading" class="text-center p-5 d-none">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-3">Reading sensor data...</p>
+                                </div>
+                                
+                                <div id="no-data-message" class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Click "View Live Data" to start monitoring real-time sensor information.
+                                </div>
+                                
+                                <div id="sensor-data-container" class="row d-none">
+                                    <!-- Template for sensor data items -->
+                                    <div class="col-md-3 mb-3 sensor-item">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <h5 class="sensor-name">RPM</h5>
+                                                <div class="sensor-value display-5">0</div>
+                                                <div class="sensor-unit text-muted">rpm</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scan in progress modal -->
+<div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scanModalLabel">Diagnostic Scan in Progress</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-4" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="lead" id="scan-status-message">Connecting to vehicle...</p>
+                <div class="progress mt-3">
+                    <div id="scan-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 10%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scan results modal -->
+<div class="modal fade" id="resultsModal" tabindex="-1" aria-labelledby="resultsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultsModalLabel">Diagnostic Scan Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="scan-success-content">
+                    <div class="alert" id="dtc-summary"></div>
+                    
+                    <p class="lead">Would you like to view the detailed results and AI analysis?</p>
+                </div>
+                <div id="scan-error-content" class="d-none">
+                    <div class="alert alert-danger">
+                        <h4><i class="fas fa-exclamation-triangle me-2"></i> Error</h4>
+                        <p id="scan-error-message">Unable to complete the diagnostic scan.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="view-results-btn" href="#" class="btn btn-primary">View Detailed Results</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // References to UI elements
+        const scanBtn = document.getElementById('scan-btn');
+        const liveDataBtn = document.getElementById('live-data-btn');
+        const clearCodesBtn = document.getElementById('clear-codes-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const connectionStatus = document.getElementById('connection-status');
+        const updateStatus = document.getElementById('update-status');
+        const sensorDataContainer = document.getElementById('sensor-data-container');
+        const noDataMessage = document.getElementById('no-data-message');
+        const sensorDataLoading = document.getElementById('sensor-data-loading');
+        
+        // Modals
+        const scanModal = new bootstrap.Modal(document.getElementById('scanModal'));
+        const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'));
+        
+        // Mock sensor data for demonstration
+        const mockSensors = [
+            { name: 'RPM', pid: '010C', value: 1243, unit: 'rpm', min: 0, max: 8000 },
+            { name: 'Vehicle Speed', pid: '010D', value: 0, unit: 'km/h', min: 0, max: 180 },
+            { name: 'Coolant Temp', pid: '0105', value: 87, unit: '°C', min: -40, max: 150 },
+            { name: 'Engine Load', pid: '0104', value: 21, unit: '%', min: 0, max: 100 },
+            { name: 'Intake Air Temp', pid: '010F', value: 24, unit: '°C', min: -40, max: 100 },
+            { name: 'Throttle Position', pid: '0111', value: 17, unit: '%', min: 0, max: 100 },
+            { name: 'Fuel Level', pid: '012F', value: 52, unit: '%', min: 0, max: 100 },
+            { name: 'Fuel Pressure', pid: '010A', value: 386, unit: 'kPa', min: 0, max: 700 }
+        ];
+        
+        // Handle "Scan for Trouble Codes" button
+        scanBtn.addEventListener('click', function() {
+            // Show scan modal
+            scanModal.show();
+            
+            // Update scan progress (simulated)
+            let progress = 10;
+            const scanStatusMessage = document.getElementById('scan-status-message');
+            const scanProgressBar = document.getElementById('scan-progress-bar');
+            
+            const progressInterval = setInterval(function() {
+                progress += 10;
+                scanProgressBar.style.width = progress + '%';
+                
+                switch(progress) {
+                    case 20:
+                        scanStatusMessage.textContent = 'Initializing diagnostic session...';
+                        break;
+                    case 40:
+                        scanStatusMessage.textContent = 'Reading vehicle information...';
+                        
+                        // Update vehicle info
+                        document.getElementById('vehicle-vin').textContent = '1HGCM82633A123456';
+                        document.getElementById('vehicle-ecu').textContent = 'Generic OBD2 ECU';
+                        document.getElementById('vehicle-protocol').textContent = 'ISO 15765-4 (CAN 11/500)';
+                        break;
+                    case 60:
+                        scanStatusMessage.textContent = 'Scanning for trouble codes...';
+                        break;
+                    case 80:
+                        scanStatusMessage.textContent = 'Reading freeze frame data...';
+                        break;
+                    case 100:
+                        scanStatusMessage.textContent = 'Scan complete!';
+                        clearInterval(progressInterval);
+                        
+                        // Hide scan modal and show results
+                        setTimeout(function() {
+                            scanModal.hide();
+                            showResults();
+                        }, 500);
+                        break;
+                }
+            }, 500);
+            
+            // Enable clear codes button after scan
+            clearCodesBtn.disabled = false;
+            
+            // AJAX request to the server (simulated)
+            /*
+            fetch('/obd2/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'port=/dev/ttyUSB0'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResults(data.session_id, data.dtc_count);
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(error => {
+                showError('Network error: ' + error);
+            })
+            .finally(() => {
+                scanModal.hide();
+            });
+            */
+        });
+        
+        // Function to show diagnostic results
+        function showResults(sessionId = 1, dtcCount = 2) {
+            // Prepare results modal
+            const dtcSummary = document.getElementById('dtc-summary');
+            const viewResultsBtn = document.getElementById('view-results-btn');
+            
+            // Hide error content if previously shown
+            document.getElementById('scan-success-content').classList.remove('d-none');
+            document.getElementById('scan-error-content').classList.add('d-none');
+            
+            // Set summary class based on DTC count
+            let summaryClass = 'alert-success';
+            let summaryIcon = 'fas fa-check-circle';
+            let summaryText = 'Good news! No issues found.';
+            
+            if (dtcCount > 0) {
+                summaryClass = dtcCount > 3 ? 'alert-danger' : 'alert-warning';
+                summaryIcon = 'fas fa-exclamation-triangle';
+                summaryText = `Found ${dtcCount} trouble code${dtcCount > 1 ? 's' : ''}. This may indicate a problem with your vehicle.`;
+            }
+            
+            dtcSummary.className = `alert ${summaryClass}`;
+            dtcSummary.innerHTML = `<h4><i class="${summaryIcon} me-2"></i> Scan Complete</h4><p>${summaryText}</p>`;
+            
+            // Set results URL
+            viewResultsBtn.href = `/obd2/results/${sessionId}`;
+            
+            // Show results modal
+            resultsModal.show();
+        }
+        
+        // Function to show error message
+        function showError(message) {
+            // Hide success content
+            document.getElementById('scan-success-content').classList.add('d-none');
+            document.getElementById('scan-error-content').classList.remove('d-none');
+            
+            // Set error message
+            document.getElementById('scan-error-message').textContent = message;
+            
+            // Show results modal with error
+            resultsModal.show();
+        }
+        
+        // Handle "View Live Data" button
+        liveDataBtn.addEventListener('click', function() {
+            // Toggle button text
+            if (liveDataBtn.classList.contains('active')) {
+                stopLiveData();
+            } else {
+                startLiveData();
+            }
+        });
+        
+        let liveDataInterval = null;
+        
+        // Function to start live data
+        function startLiveData() {
+            // Update UI
+            liveDataBtn.classList.add('active');
+            liveDataBtn.innerHTML = '<i class="fas fa-stop fa-2x mb-2"></i><br>Stop Live Data';
+            updateStatus.textContent = 'Updating';
+            updateStatus.className = 'badge bg-success';
+            
+            // Show loading
+            noDataMessage.classList.add('d-none');
+            sensorDataLoading.classList.remove('d-none');
+            
+            // Simulate loading delay
+            setTimeout(function() {
+                // Hide loading
+                sensorDataLoading.classList.add('d-none');
+                
+                // Clear and populate sensor container
+                sensorDataContainer.innerHTML = '';
+                sensorDataContainer.classList.remove('d-none');
+                
+                // Add sensor items
+                mockSensors.forEach(sensor => {
+                    const sensorElem = createSensorElement(sensor);
+                    sensorDataContainer.appendChild(sensorElem);
+                });
+                
+                // Start periodic updates
+                liveDataInterval = setInterval(updateLiveData, 1000);
+            }, 1500);
+        }
+        
+        // Function to stop live data
+        function stopLiveData() {
+            // Clear interval
+            if (liveDataInterval !== null) {
+                clearInterval(liveDataInterval);
+                liveDataInterval = null;
+            }
+            
+            // Update UI
+            liveDataBtn.classList.remove('active');
+            liveDataBtn.innerHTML = '<i class="fas fa-chart-line fa-2x mb-2"></i><br>View Live Data';
+            updateStatus.textContent = 'Stopped';
+            updateStatus.className = 'badge bg-secondary';
+            
+            // Hide sensor data
+            sensorDataContainer.classList.add('d-none');
+            noDataMessage.classList.remove('d-none');
+        }
+        
+        // Function to create sensor element
+        function createSensorElement(sensor) {
+            const col = document.createElement('div');
+            col.className = 'col-md-3 mb-3 sensor-item';
+            col.dataset.pid = sensor.pid;
+            
+            col.innerHTML = `
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="sensor-name">${sensor.name}</h5>
+                        <div class="sensor-value display-5">${sensor.value}</div>
+                        <div class="sensor-unit text-muted">${sensor.unit}</div>
+                    </div>
+                </div>
+            `;
+            
+            return col;
+        }
+        
+        // Function to update live data (simulated)
+        function updateLiveData() {
+            const sensorItems = document.querySelectorAll('.sensor-item');
+            
+            sensorItems.forEach(item => {
+                const pid = item.dataset.pid;
+                const valueElement = item.querySelector('.sensor-value');
+                
+                // Find the mock sensor
+                const sensor = mockSensors.find(s => s.pid === pid);
+                if (sensor) {
+                    // Calculate new random value within range
+                    if (sensor.name === 'RPM') {
+                        // More realistic RPM fluctuation
+                        const currentValue = parseInt(valueElement.textContent);
+                        const change = Math.floor(Math.random() * 100) - 50;
+                        sensor.value = Math.max(sensor.min, Math.min(sensor.max, currentValue + change));
+                    } else {
+                        // Small random changes for other sensors
+                        const range = sensor.max - sensor.min;
+                        const change = Math.random() * 0.1 * range - 0.05 * range;
+                        sensor.value = Math.max(sensor.min, Math.min(sensor.max, sensor.value + change));
+                    }
+                    
+                    // Format value
+                    let displayValue = sensor.value;
+                    if (sensor.unit === '%' || sensor.unit === '°C' || sensor.unit === 'km/h') {
+                        displayValue = Math.round(sensor.value);
+                    } else {
+                        displayValue = Math.round(sensor.value * 10) / 10;
+                    }
+                    
+                    // Update display
+                    valueElement.textContent = displayValue;
+                }
+            });
+        }
+        
+        // Handle "Clear Trouble Codes" button
+        clearCodesBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all diagnostic trouble codes and freeze frame data?')) {
+                alert('Trouble codes cleared successfully.');
+                clearCodesBtn.disabled = true;
+            }
+        });
+        
+        // Handle "Disconnect" button
+        disconnectBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to disconnect from the vehicle?')) {
+                // Stop live data if running
+                if (liveDataInterval !== null) {
+                    stopLiveData();
+                }
+                
+                // Redirect to connect page
+                window.location.href = '{{ url_for("obd2_connect") }}';
+            }
+        });
+    });
+</script>
+{% endblock %}

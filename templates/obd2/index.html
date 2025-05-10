@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block title %}OBD2 Diagnostic Tool{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h1 class="mb-0"><i class="fas fa-car"></i> OBD2 Diagnostic Tool</h1>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <h2>Professional Vehicle Diagnostics</h2>
+                    <p class="lead">
+                        Connect directly to your vehicle's OBD2 port using a USB cable for comprehensive diagnostics
+                        powered by artificial intelligence.
+                    </p>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-4 text-center">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-plug fa-3x text-primary mb-3"></i>
+                                <h4>USB Connection</h4>
+                                <p>Connect your device directly to the vehicle's OBD2 port</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-laptop-code fa-3x text-primary mb-3"></i>
+                                <h4>Live Data</h4>
+                                <p>View real-time sensor data and diagnostic information</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                                <h4>AI Analysis</h4>
+                                <p>Get intelligent diagnostic insights and repair recommendations</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a href="{{ url_for('obd2_connect') }}" class="btn btn-primary btn-lg px-5">
+                        <i class="fas fa-tools me-2"></i> Start Diagnostic
+                    </a>
+                </div>
+                
+                <div class="alert alert-info mt-5">
+                    <h4><i class="fas fa-info-circle me-2"></i> How It Works</h4>
+                    <ol>
+                        <li>Connect your OBD2-to-USB cable to your vehicle's OBD2 port (usually under the dashboard)</li>
+                        <li>Connect the USB end to your device</li>
+                        <li>Enter your vehicle information and start the diagnostic scan</li>
+                        <li>View comprehensive diagnostic results and AI-enhanced repair recommendations</li>
+                    </ol>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i> This application requires an OBD2-to-USB cable adapter to communicate with your vehicle.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

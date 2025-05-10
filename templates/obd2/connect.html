@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+
+{% block title %}Connect to Vehicle{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h1 class="mb-0"><i class="fas fa-plug"></i> Connect to Vehicle</h1>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <h4><i class="fas fa-info-circle me-2"></i> Connection Instructions</h4>
+                    <ol>
+                        <li>Ensure your vehicle is turned off</li>
+                        <li>Locate the OBD2 port (usually under the dashboard on the driver's side)</li>
+                        <li>Connect the OBD2 adapter to the port</li>
+                        <li>Connect the USB end to your device</li>
+                        <li>Turn the vehicle ignition to the "ON" position (you don't need to start the engine)</li>
+                        <li>Enter your vehicle information below and click "Connect"</li>
+                    </ol>
+                </div>
+                
+                <form id="vehicle-form" action="{{ url_for('obd2_connect') }}" method="post" class="needs-validation" novalidate>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3>Vehicle Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="make" class="form-label">Make <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="make" name="make" required placeholder="e.g., Toyota, Ford, Honda">
+                                    <div class="invalid-feedback">
+                                        Please enter your vehicle's make.
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="model" class="form-label">Model <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="model" name="model" required placeholder="e.g., Camry, F-150, Civic">
+                                    <div class="invalid-feedback">
+                                        Please enter your vehicle's model.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="year" name="year" required min="1900" max="2099" placeholder="e.g., 2015">
+                                    <div class="invalid-feedback">
+                                        Please enter a valid year (1900-2099).
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="mileage" class="form-label">Mileage</label>
+                                    <input type="number" class="form-control" id="mileage" name="mileage" min="0" placeholder="e.g., 75000">
+                                    <div class="invalid-feedback">
+                                        Please enter a valid mileage.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3>Connection Details</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="connection-status" class="alert alert-warning">
+                                <i class="fas fa-search me-2"></i> Searching for OBD2 adapters...
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="port" class="form-label">OBD2 Port</label>
+                                <select class="form-select" id="port" name="port">
+                                    <option value="" selected disabled>Please connect OBD2 adapter</option>
+                                </select>
+                                <div class="form-text">If your adapter is connected but not detected, try disconnecting and reconnecting it.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button id="connect-btn" type="submit" class="btn btn-primary btn-lg px-5" disabled>
+                            <i class="fas fa-plug me-2"></i> Connect to Vehicle
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // In a real implementation, we would use the Web Serial API to detect OBD2 adapters
+        // For demo purposes, we'll simulate finding a device after a short delay
+        
+        const connectionStatus = document.getElementById('connection-status');
+        const portSelect = document.getElementById('port');
+        const connectBtn = document.getElementById('connect-btn');
+        
+        setTimeout(function() {
+            // Simulate finding an adapter
+            connectionStatus.className = 'alert alert-success';
+            connectionStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i> OBD2 adapter detected!';
+            
+            // Add the port to the select
+            portSelect.innerHTML = '';
+            
+            // In a real implementation, we would list all available ports
+            // For demo, we'll just show a simulated port
+            let option = document.createElement('option');
+            option.value = '/dev/ttyUSB0';
+            option.text = 'USB OBD2 Adapter (/dev/ttyUSB0)';
+            portSelect.appendChild(option);
+            
+            // Enable the connect button
+            connectBtn.disabled = false;
+        }, 2000);
+        
+        // Form validation
+        const form = document.getElementById('vehicle-form');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        });
+    });
+</script>
+{% endblock %}
