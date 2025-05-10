@@ -1,93 +1,346 @@
 {% extends "layout.html" %}
 
-{% block title %}Connect to Vehicle{% endblock %}
+{% block title %}Connect to OBD2{% endblock %}
+
+{% block head %}
+<style>
+    .connect-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .connection-steps {
+        background-color: #2c3542;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .connection-steps ol {
+        margin-bottom: 0;
+    }
+    
+    .connector-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .status-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    
+    .status-indicator.disconnected {
+        background-color: #dc3545;
+        box-shadow: 0 0 10px #dc3545;
+    }
+    
+    .status-indicator.connecting {
+        background-color: #ffc107;
+        box-shadow: 0 0 10px #ffc107;
+        animation: blink 1s infinite;
+    }
+    
+    .status-indicator.connected {
+        background-color: #28a745;
+        box-shadow: 0 0 10px #28a745;
+    }
+    
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+    
+    .vehicle-info {
+        background-color: #2c3542;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .vehicle-info h4 {
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .port-selector {
+        margin-bottom: 20px;
+    }
+    
+    .obd-port-option {
+        cursor: pointer;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .obd-port-option:hover {
+        background-color: #343a40;
+    }
+    
+    .obd-port-option.selected {
+        border-color: #17a2b8;
+        background-color: #2c3542;
+    }
+    
+    .troubleshooting {
+        margin-top: 30px;
+    }
+    
+    .troubleshooting-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    
+    .troubleshooting-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid #343a40;
+    }
+    
+    .troubleshooting-list li:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h1 class="mb-0"><i class="fas fa-plug"></i> Connect to Vehicle</h1>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info mb-4">
-                    <h4><i class="fas fa-info-circle me-2"></i> Connection Instructions</h4>
-                    <ol>
-                        <li>Ensure your vehicle is turned off</li>
-                        <li>Locate the OBD2 port (usually under the dashboard on the driver's side)</li>
-                        <li>Connect the OBD2 adapter to the port</li>
-                        <li>Connect the USB end to your device</li>
-                        <li>Turn the vehicle ignition to the "ON" position (you don't need to start the engine)</li>
-                        <li>Enter your vehicle information below and click "Connect"</li>
-                    </ol>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-plug me-2"></i> Connect to Vehicle OBD2</h2>
                 </div>
-                
-                <form id="vehicle-form" action="{{ url_for('obd2_connect') }}" method="post" class="needs-validation" novalidate>
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h3>Vehicle Information</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="make" class="form-label">Make <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="make" name="make" required placeholder="e.g., Toyota, Ford, Honda">
-                                    <div class="invalid-feedback">
-                                        Please enter your vehicle's make.
-                                    </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Connect your vehicle's OBD2 port to your device using a USB cable to begin the diagnostic process.
+                    </div>
+                    
+                    <div class="connect-panel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3><i class="fas fa-link me-2"></i> Connect Your Cable</h3>
+                                <div class="connection-steps">
+                                    <h5>Follow these steps:</h5>
+                                    <ol>
+                                        <li>Ensure your vehicle is in accessory mode (key turned but engine off)</li>
+                                        <li>Locate the OBD2 port (usually under the dashboard)</li>
+                                        <li>Connect the OBD2 adapter to the port</li>
+                                        <li>Connect the USB end to your smartphone or tablet</li>
+                                        <li>Select the USB port below and click "Connect"</li>
+                                    </ol>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="model" class="form-label">Model <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="model" name="model" required placeholder="e.g., Camry, F-150, Civic">
-                                    <div class="invalid-feedback">
-                                        Please enter your vehicle's model.
+                                
+                                <div id="connection-status" class="mt-4">
+                                    <h5 class="mb-3">Connection Status:</h5>
+                                    <p class="lead">
+                                        <span class="status-indicator disconnected" id="status-light"></span>
+                                        <span id="status-text">Not Connected</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-center">
+                                <img src="https://cdn2.iconfinder.com/data/icons/car-service-outline-color/64/OBD-obd-cable-connector-diagnostic-2-512.png" alt="OBD2 Connector" class="connector-image" style="max-width: 250px;">
+                                
+                                <!-- Port selection box -->
+                                <div class="port-selector">
+                                    <h5>Select USB Port</h5>
+                                    <div class="alert alert-warning" id="no-ports-message" style="display: none;">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> No OBD2 USB devices detected. Please check your connection.
+                                    </div>
+                                    <div id="port-list">
+                                        <!-- Port options will be populated dynamically -->
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2">Scanning for OBD2 devices...</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Connect button -->
+                        <div class="text-center mt-4">
+                            <form id="connect-form" action="{{ url_for('obd2_connect') }}" method="POST">
+                                <input type="hidden" id="selected-port" name="port" value="">
+                                <input type="hidden" id="connection-type" name="connection_type" value="USB">
+                                <button type="submit" id="connect-button" class="btn btn-primary btn-lg" disabled>
+                                    <i class="fas fa-link me-2"></i> Connect to Vehicle
+                                </button>
+                                <a href="{{ url_for('obd2_index') }}" class="btn btn-secondary btn-lg ms-2">
+                                    <i class="fas fa-arrow-left me-2"></i> Back
+                                </a>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Vehicle information form (shown after successful connection) -->
+                    <div id="vehicle-info-form" class="vehicle-info" style="display: none;">
+                        <h4><i class="fas fa-car me-2"></i> Vehicle Information</h4>
+                        <form action="{{ url_for('vehicle_info') }}" method="POST">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="year" name="year" required min="1900" max="2099" placeholder="e.g., 2015">
-                                    <div class="invalid-feedback">
-                                        Please enter a valid year (1900-2099).
-                                    </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="make" class="form-label">Make</label>
+                                    <input type="text" class="form-control" id="make" name="make" required>
                                 </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="model" class="form-label">Model</label>
+                                    <input type="text" class="form-control" id="model" name="model" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="year" class="form-label">Year</label>
+                                    <input type="number" class="form-control" id="year" name="year" min="1980" max="2030" required>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="mileage" class="form-label">Mileage</label>
-                                    <input type="number" class="form-control" id="mileage" name="mileage" min="0" placeholder="e.g., 75000">
-                                    <div class="invalid-feedback">
-                                        Please enter a valid mileage.
+                                    <input type="number" class="form-control" id="mileage" name="mileage" min="0">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="vin" class="form-label">VIN (Optional)</label>
+                                    <input type="text" class="form-control" id="vin" name="vin" maxlength="17">
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-save me-2"></i> Save Vehicle Info
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Troubleshooting section -->
+                    <div class="troubleshooting">
+                        <h4><i class="fas fa-tools me-2"></i> Troubleshooting</h4>
+                        <div class="accordion" id="troubleshootingAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                        Device not detected?
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#troubleshootingAccordion">
+                                    <div class="accordion-body">
+                                        <ul class="troubleshooting-list">
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> Check that the OBD2 adapter is firmly connected to your vehicle's port</li>
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> Ensure the USB cable is securely connected to your device</li>
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> Make sure your vehicle is in accessory mode (key turned, but engine not started)</li>
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> Try unplugging and replugging both ends of the cable</li>
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> Some vehicles require the engine to be running for OBD2 communication</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingTwo">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        Connection errors?
+                                    </button>
+                                </h2>
+                                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#troubleshootingAccordion">
+                                    <div class="accordion-body">
+                                        <ul class="troubleshooting-list">
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> Make sure your USB OBD2 adapter is compatible with your vehicle</li>
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> Some older vehicles (pre-1996) may not support OBD2 standards</li>
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> Try rebooting your device while the adapter is connected</li>
+                                            <li><i class="fas fa-check-circle me-2 text-info"></i> If your vehicle has a specific OBD protocol, ensure your adapter supports it</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingThree">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                        Where to find the OBD2 port?
+                                    </button>
+                                </h2>
+                                <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#troubleshootingAccordion">
+                                    <div class="accordion-body">
+                                        <p>The OBD2 port is typically located in one of these areas:</p>
+                                        <ul class="troubleshooting-list">
+                                            <li><i class="fas fa-car me-2 text-info"></i> Under the dashboard on the driver's side</li>
+                                            <li><i class="fas fa-car me-2 text-info"></i> Near the steering column</li>
+                                            <li><i class="fas fa-car me-2 text-info"></i> Behind a panel or cover in the driver's footwell</li>
+                                            <li><i class="fas fa-car me-2 text-info"></i> In the center console (less common)</li>
+                                            <li><i class="fas fa-car me-2 text-info"></i> Under the hood in a protected compartment (rare)</li>
+                                        </ul>
+                                        <p>Consult your vehicle's owner manual for the exact location.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h3>Connection Details</h3>
-                        </div>
-                        <div class="card-body">
-                            <div id="connection-status" class="alert alert-warning">
-                                <i class="fas fa-search me-2"></i> Searching for OBD2 adapters...
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="port" class="form-label">OBD2 Port</label>
-                                <select class="form-select" id="port" name="port">
-                                    <option value="" selected disabled>Please connect OBD2 adapter</option>
-                                </select>
-                                <div class="form-text">If your adapter is connected but not detected, try disconnecting and reconnecting it.</div>
-                            </div>
-                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for connection in progress -->
+<div class="modal fade" id="connectionModal" tabindex="-1" aria-labelledby="connectionModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="connectionModalLabel">Connecting to Vehicle</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-                    
-                    <div class="text-center mt-4">
-                        <button id="connect-btn" type="submit" class="btn btn-primary btn-lg px-5" disabled>
-                            <i class="fas fa-plug me-2"></i> Connect to Vehicle
-                        </button>
-                    </div>
-                </form>
+                </div>
+                <p class="lead">Establishing connection to your vehicle's OBD system...</p>
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="connection-progress" role="progressbar" style="width: 0%"></div>
+                </div>
+                <p id="connection-message">Initializing OBD2 adapter...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for connection errors -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="errorModalLabel">Connection Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-exclamation-triangle text-danger" style="font-size: 48px;"></i>
+                </div>
+                <p class="lead text-center" id="error-message">Failed to connect to the vehicle. Please check your connections and try again.</p>
+                <div class="alert alert-secondary">
+                    <p><strong>Common issues:</strong></p>
+                    <ul>
+                        <li>OBD2 adapter is not properly connected</li>
+                        <li>Vehicle ignition is not turned on</li>
+                        <li>Unsupported OBD2 protocol</li>
+                        <li>Faulty OBD2 adapter or USB cable</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="retry-connection">Try Again</button>
             </div>
         </div>
     </div>
@@ -97,42 +350,203 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // In a real implementation, we would use the Web Serial API to detect OBD2 adapters
-        // For demo purposes, we'll simulate finding a device after a short delay
+        // Elements
+        const portList = document.getElementById('port-list');
+        const connectButton = document.getElementById('connect-button');
+        const connectForm = document.getElementById('connect-form');
+        const selectedPortInput = document.getElementById('selected-port');
+        const statusLight = document.getElementById('status-light');
+        const statusText = document.getElementById('status-text');
+        const noPortsMessage = document.getElementById('no-ports-message');
+        const vehicleInfoForm = document.getElementById('vehicle-info-form');
+        const retryButton = document.getElementById('retry-connection');
         
-        const connectionStatus = document.getElementById('connection-status');
-        const portSelect = document.getElementById('port');
-        const connectBtn = document.getElementById('connect-btn');
+        // Connection modal elements
+        const connectionModal = new bootstrap.Modal(document.getElementById('connectionModal'));
+        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        const connectionProgress = document.getElementById('connection-progress');
+        const connectionMessage = document.getElementById('connection-message');
         
-        setTimeout(function() {
-            // Simulate finding an adapter
-            connectionStatus.className = 'alert alert-success';
-            connectionStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i> OBD2 adapter detected!';
-            
-            // Add the port to the select
-            portSelect.innerHTML = '';
-            
-            // In a real implementation, we would list all available ports
-            // For demo, we'll just show a simulated port
-            let option = document.createElement('option');
-            option.value = '/dev/ttyUSB0';
-            option.text = 'USB OBD2 Adapter (/dev/ttyUSB0)';
-            portSelect.appendChild(option);
-            
-            // Enable the connect button
-            connectBtn.disabled = false;
-        }, 2000);
+        // Variables
+        let selectedPort = null;
+        let ports = [];
+        let isConnecting = false;
+        let connectionSuccessful = false;
         
-        // Form validation
-        const form = document.getElementById('vehicle-form');
-        form.addEventListener('submit', function(event) {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
+        // Simulate scanning for OBD2 devices
+        setTimeout(scanForDevices, 1500);
+        
+        // Scan for OBD2 devices
+        function scanForDevices() {
+            // In a real implementation, this would use the Web Serial API or similar
+            // For demonstration, we'll simulate finding devices
+            fetch('/api/obd2/scan-ports', { method: 'GET' })
+                .then(response => response.json())
+                .then(data => {
+                    ports = data.ports || simulatePorts();
+                    updatePortList();
+                })
+                .catch(error => {
+                    console.error('Error scanning for OBD2 devices:', error);
+                    ports = simulatePorts();
+                    updatePortList();
+                });
+        }
+        
+        // Simulate available ports for demonstration
+        function simulatePorts() {
+            return [
+                { id: 'USB0', name: 'OBD2 Adapter (COM3)', type: 'ELM327' },
+                { id: 'USB1', name: 'Serial Device (COM4)', type: 'Unknown' }
+            ];
+        }
+        
+        // Update the port list UI
+        function updatePortList() {
+            portList.innerHTML = '';
+            
+            if (ports.length === 0) {
+                noPortsMessage.style.display = 'block';
+                connectButton.disabled = true;
+                return;
             }
             
-            form.classList.add('was-validated');
+            noPortsMessage.style.display = 'none';
+            
+            ports.forEach(port => {
+                const portOption = document.createElement('div');
+                portOption.className = 'obd-port-option';
+                portOption.dataset.portId = port.id;
+                portOption.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="port-radio" id="port-${port.id}">
+                        <label class="form-check-label" for="port-${port.id}">
+                            <strong>${port.name}</strong>
+                            <br>
+                            <small class="text-muted">Type: ${port.type}</small>
+                        </label>
+                    </div>
+                `;
+                
+                portOption.addEventListener('click', () => {
+                    // Clear previous selections
+                    document.querySelectorAll('.obd-port-option').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    
+                    // Select this port
+                    portOption.classList.add('selected');
+                    const radio = portOption.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    
+                    // Update form value and enable connect button
+                    selectedPort = port.id;
+                    selectedPortInput.value = port.id;
+                    connectButton.disabled = false;
+                });
+                
+                portList.appendChild(portOption);
+            });
+        }
+        
+        // Handle form submission
+        connectForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            if (!selectedPort) {
+                alert('Please select a port first');
+                return;
+            }
+            
+            // Start connection process
+            startConnection();
         });
+        
+        // Retry connection
+        retryButton.addEventListener('click', function() {
+            errorModal.hide();
+            startConnection();
+        });
+        
+        // Start the connection process
+        function startConnection() {
+            if (isConnecting) return;
+            
+            isConnecting = true;
+            connectionSuccessful = false;
+            
+            // Update UI to show connecting state
+            statusLight.className = 'status-indicator connecting';
+            statusText.textContent = 'Connecting...';
+            
+            // Show connection modal
+            connectionModal.show();
+            connectionProgress.style.width = '0%';
+            connectionMessage.textContent = 'Initializing OBD2 adapter...';
+            
+            // Simulate connection steps
+            simulateConnectionProgress();
+        }
+        
+        // Simulate connection progress (in a real app, this would be actual connection steps)
+        function simulateConnectionProgress() {
+            const steps = [
+                { progress: 10, message: 'Initializing OBD2 adapter...' },
+                { progress: 25, message: 'Detecting vehicle protocol...' },
+                { progress: 40, message: 'Establishing communication...' },
+                { progress: 60, message: 'Reading vehicle information...' },
+                { progress: 80, message: 'Verifying connection...' },
+                { progress: 100, message: 'Connection established!' }
+            ];
+            
+            let currentStep = 0;
+            
+            const progressInterval = setInterval(() => {
+                if (currentStep >= steps.length) {
+                    clearInterval(progressInterval);
+                    finishConnection(true);
+                    return;
+                }
+                
+                const step = steps[currentStep];
+                connectionProgress.style.width = `${step.progress}%`;
+                connectionMessage.textContent = step.message;
+                
+                currentStep++;
+                
+                // Simulate a random connection failure (about 20% chance)
+                if (currentStep === 3 && Math.random() < 0.2) {
+                    clearInterval(progressInterval);
+                    finishConnection(false);
+                }
+            }, 1000);
+        }
+        
+        // Finish the connection process
+        function finishConnection(success) {
+            connectionModal.hide();
+            isConnecting = false;
+            
+            if (success) {
+                // Connection successful
+                connectionSuccessful = true;
+                statusLight.className = 'status-indicator connected';
+                statusText.textContent = 'Connected';
+                
+                // Show vehicle info form
+                vehicleInfoForm.style.display = 'block';
+                
+                // In a real application, we would redirect to the dashboard or continue the flow
+                // window.location.href = "{{ url_for('obd2_dashboard') }}";
+            } else {
+                // Connection failed
+                statusLight.className = 'status-indicator disconnected';
+                statusText.textContent = 'Connection Failed';
+                
+                // Show error modal
+                errorModal.show();
+            }
+        }
     });
 </script>
 {% endblock %}

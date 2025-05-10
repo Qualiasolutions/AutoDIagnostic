@@ -2,303 +2,673 @@
 
 {% block title %}OBD2 Diagnostic Results{% endblock %}
 
+{% block head %}
+<style>
+    .results-header {
+        margin-bottom: 20px;
+    }
+    
+    .severity-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    
+    .severity-indicator.critical {
+        background-color: #dc3545;
+        box-shadow: 0 0 10px #dc3545;
+    }
+    
+    .severity-indicator.high {
+        background-color: #fd7e14;
+        box-shadow: 0 0 10px #fd7e14;
+    }
+    
+    .severity-indicator.medium {
+        background-color: #ffc107;
+        box-shadow: 0 0 10px #ffc107;
+    }
+    
+    .severity-indicator.low {
+        background-color: #17a2b8;
+        box-shadow: 0 0 10px #17a2b8;
+    }
+    
+    .severity-indicator.none {
+        background-color: #28a745;
+        box-shadow: 0 0 10px #28a745;
+    }
+    
+    .vehicle-info-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .summary-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .summary-title {
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .dtc-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .dtc-title {
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .dtc-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .dtc-item {
+        background-color: #2c3542;
+        margin-bottom: 10px;
+        border-radius: : 6px;
+        padding: 15px;
+        border-left: 4px solid;
+    }
+    
+    .dtc-item.critical {
+        border-color: #dc3545;
+    }
+    
+    .dtc-item.high {
+        border-color: #fd7e14;
+    }
+    
+    .dtc-item.medium {
+        border-color: #ffc107;
+    }
+    
+    .dtc-item.low {
+        border-color: #17a2b8;
+    }
+    
+    .dtc-item.none {
+        border-color: #28a745;
+    }
+    
+    .dtc-code {
+        font-family: monospace;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    
+    .dtc-description {
+        margin-top: 5px;
+    }
+    
+    .dtc-severity {
+        float: right;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    
+    .dtc-severity.critical {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+    
+    .dtc-severity.high {
+        background-color: rgba(253, 126, 20, 0.2);
+        color: #fd7e14;
+    }
+    
+    .dtc-severity.medium {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+    
+    .dtc-severity.low {
+        background-color: rgba(23, 162, 184, 0.2);
+        color: #17a2b8;
+    }
+    
+    .dtc-severity.none {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    
+    .diagnosis-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .diagnosis-title {
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .diagnosis-item {
+        background-color: #2c3542;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        padding: 15px;
+        border-left: 4px solid;
+        position: relative;
+    }
+    
+    .diagnosis-item.critical {
+        border-color: #dc3545;
+    }
+    
+    .diagnosis-item.high {
+        border-color: #fd7e14;
+    }
+    
+    .diagnosis-item.medium {
+        border-color: #ffc107;
+    }
+    
+    .diagnosis-item.low {
+        border-color: #17a2b8;
+    }
+    
+    .diagnosis-item.none {
+        border-color: #28a745;
+    }
+    
+    .diagnosis-name {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .diagnosis-confidence {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 12px;
+    }
+    
+    .diagnosis-description {
+        margin-bottom: 0;
+    }
+    
+    .repair-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .repair-title {
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .repair-item {
+        background-color: #2c3542;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    
+    .repair-name {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .repair-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 14px;
+        color: #aaa;
+    }
+    
+    .repair-description {
+        margin-bottom: 15px;
+    }
+    
+    .repair-steps {
+        margin-top: 20px;
+        border-top: 1px solid #3a4655;
+        padding-top: 15px;
+    }
+    
+    .repair-step {
+        margin-bottom: 10px;
+        padding-left: 20px;
+        position: relative;
+    }
+    
+    .repair-step:before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #17a2b8;
+        font-size: 18px;
+    }
+    
+    .step-number {
+        font-weight: bold;
+        margin-right: 5px;
+        color: #17a2b8;
+    }
+    
+    .safety-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .safety-title {
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .safety-alert {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-left: 4px solid #dc3545;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+    
+    .safety-icon {
+        margin-right: 10px;
+        color: #dc3545;
+    }
+    
+    .sensor-data-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .sensor-title {
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .sensor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .sensor-card {
+        background-color: #2c3542;
+        border-radius: 8px;
+        padding: 15px;
+    }
+    
+    .sensor-card-title {
+        margin-bottom: 10px;
+        color: #17a2b8;
+        font-size: 14px;
+    }
+    
+    .sensor-card-value {
+        font-size: 20px;
+        font-weight: bold;
+    }
+    
+    .sensor-card-unit {
+        font-size: 12px;
+        color: #aaa;
+        margin-left: 5px;
+    }
+    
+    .engine-image {
+        max-width: 100%;
+        height: auto;
+        margin-bottom: 15px;
+        border-radius: 8px;
+    }
+    
+    .difficulty-indicator {
+        display: inline-block;
+        margin-right: 10px;
+    }
+    
+    .difficulty-dot {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 2px;
+        background-color: #495057;
+    }
+    
+    .difficulty-dot.active {
+        background-color: #17a2b8;
+    }
+    
+    .print-btn {
+        margin-right: 10px;
+    }
+    
+    .badge-cost {
+        background-color: #2c3542;
+        color: #fff;
+        font-weight: normal;
+        font-size: 14px;
+        padding: 5px 10px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-11">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h1 class="mb-0"><i class="fas fa-clipboard-list"></i> Diagnostic Results</h1>
-                    <span class="badge bg-light text-dark">Session #{{ session.id }}</span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h3>Vehicle Information</h3>
-                                <span class="badge {% if session.success %}bg-success{% else %}bg-danger{% endif %}">
-                                    {% if session.success %}Success{% else %}Failed{% endif %}
-                                </span>
-                            </div>
-                            <div class="card-body">
-                                <table class="table">
-                                    <tbody>
-                                        <tr>
-                                            <th style="width: 30%">Make:</th>
-                                            <td>{{ vehicle.make }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Model:</th>
-                                            <td>{{ vehicle.model }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Year:</th>
-                                            <td>{{ vehicle.year }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Mileage:</th>
-                                            <td>{{ vehicle.mileage|default('N/A', true) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>VIN:</th>
-                                            <td>{{ vehicle.vin|default('Not detected', true) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>ECU:</th>
-                                            <td>{{ vehicle.ecu_name|default('Not detected', true) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Protocol:</th>
-                                            <td>{{ vehicle.protocol|default('Unknown', true) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Scan Time:</th>
-                                            <td>{{ session.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <a href="{{ url_for('obd2_dashboard') }}" class="btn btn-secondary me-2">
-                                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
-                            </a>
-                            <a href="#" class="btn btn-info me-2" onclick="window.print(); return false;">
-                                <i class="fas fa-print me-1"></i> Print Report
-                            </a>
-                            <a href="#" class="btn btn-success" id="download-report">
-                                <i class="fas fa-download me-1"></i> Download PDF
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>
-                                    <i class="fas fa-exclamation-triangle me-2"></i> Diagnostic Trouble Codes
-                                    <span class="badge {% if dtcs|length == 0 %}bg-success{% elif dtcs|length > 3 %}bg-danger{% else %}bg-warning{% endif %} ms-2">
-                                        {{ dtcs|length }}
-                                    </span>
-                                </h3>
-                            </div>
-                            <div class="card-body">
-                                {% if dtcs|length == 0 %}
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle me-2"></i> No trouble codes detected.
-                                </div>
-                                {% else %}
-                                <div class="table-responsive">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Code</th>
-                                                <th>Description</th>
-                                                <th>Type</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for dtc in dtcs %}
-                                            <tr>
-                                                <td>{{ dtc.code }}</td>
-                                                <td>{{ dtc.description|default('Unknown code', true) }}</td>
-                                                <td>
-                                                    <span class="badge {% if dtc.type == 'pending' %}bg-warning{% elif dtc.type == 'permanent' %}bg-danger{% else %}bg-secondary{% endif %}">
-                                                        {{ dtc.type|capitalize }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                {% if dtcs|length > 0 and dtc_analysis %}
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3><i class="fas fa-brain me-2"></i> AI-Enhanced Diagnostic Analysis</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="alert {% if dtc_analysis.severity == 'critical' %}alert-danger{% elif dtc_analysis.severity == 'high' %}alert-warning{% elif dtc_analysis.severity == 'medium' %}alert-info{% else %}alert-success{% endif %}">
-                                    <h4>
-                                        <i class="fas {% if dtc_analysis.severity == 'critical' %}fa-exclamation-circle{% elif dtc_analysis.severity == 'high' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
-                                        Overall Assessment: {{ dtc_analysis.severity|capitalize }}
-                                    </h4>
-                                    <p class="lead">{{ dtc_analysis.summary }}</p>
-                                </div>
-                                
-                                <div class="row mt-4">
-                                    <div class="col-md-6">
-                                        <h4>Likely Causes</h4>
-                                        <ul class="list-group mb-4">
-                                            {% for cause in dtc_analysis.likely_causes %}
-                                            <li class="list-group-item">{{ cause }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h4>Recommended Tests</h4>
-                                        <ul class="list-group mb-4">
-                                            {% for test in dtc_analysis.recommended_tests %}
-                                            <li class="list-group-item">{{ test }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-                                
-                                {% if dtc_analysis.safety_concerns %}
-                                <div class="alert alert-danger mt-3">
-                                    <h4><i class="fas fa-exclamation-triangle me-2"></i> Safety Concerns</h4>
-                                    <p>{{ dtc_analysis.safety_concerns }}</p>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3><i class="fas fa-tools me-2"></i> DIY Repair Options</h3>
-                            </div>
-                            <div class="card-body">
-                                {% if dtc_analysis.repair_options and dtc_analysis.repair_options.diy %}
-                                <div class="accordion" id="diyRepairsAccordion">
-                                    {% for repair in dtc_analysis.repair_options.diy %}
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="diy-heading-{{ loop.index }}">
-                                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#diy-collapse-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="diy-collapse-{{ loop.index }}">
-                                                {{ repair.name }}
-                                                <span class="badge bg-info ms-auto me-2">Difficulty: {{ repair.difficulty }}/5</span>
-                                                <span class="badge bg-secondary">Est. Cost: {{ repair.cost }}</span>
-                                            </button>
-                                        </h2>
-                                        <div id="diy-collapse-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="diy-heading-{{ loop.index }}" data-bs-parent="#diyRepairsAccordion">
-                                            <div class="accordion-body">
-                                                <p>{{ repair.description }}</p>
-                                                
-                                                <h5>Tools Required</h5>
-                                                <ul>
-                                                    {% for tool in repair.tools_required %}
-                                                    <li>{{ tool }}</li>
-                                                    {% endfor %}
-                                                </ul>
-                                                
-                                                <h5>Step-by-Step Procedure</h5>
-                                                <ol class="list-group list-group-numbered">
-                                                    {% for step in repair.steps %}
-                                                    <li class="list-group-item">{{ step }}</li>
-                                                    {% endfor %}
-                                                </ol>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% else %}
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i> No DIY repair options available for these trouble codes. Professional repair is recommended.
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3><i class="fas fa-user-md me-2"></i> Professional Repair Recommendations</h3>
-                            </div>
-                            <div class="card-body">
-                                {% if dtc_analysis.repair_options and dtc_analysis.repair_options.professional %}
-                                <div class="accordion" id="proRepairsAccordion">
-                                    {% for repair in dtc_analysis.repair_options.professional %}
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="pro-heading-{{ loop.index }}">
-                                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#pro-collapse-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="pro-collapse-{{ loop.index }}">
-                                                {{ repair.name }}
-                                                <span class="badge bg-secondary ms-auto me-2">Est. Cost: {{ repair.cost }}</span>
-                                            </button>
-                                        </h2>
-                                        <div id="pro-collapse-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="pro-heading-{{ loop.index }}" data-bs-parent="#proRepairsAccordion">
-                                            <div class="accordion-body">
-                                                <p>{{ repair.description }}</p>
-                                                
-                                                {% if repair.specialist_type %}
-                                                <div class="alert alert-info">
-                                                    <i class="fas fa-info-circle me-2"></i> This repair should be performed by a <strong>{{ repair.specialist_type }}</strong>.
-                                                </div>
-                                                {% endif %}
-                                                
-                                                {% if repair.notes %}
-                                                <h5>Additional Notes</h5>
-                                                <p>{{ repair.notes }}</p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% else %}
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i> No professional repair recommendations available.
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                
-                {% if sensor_readings|length > 0 %}
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3><i class="fas fa-tachometer-alt me-2"></i> Sensor Readings</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Sensor</th>
-                                                <th>Value</th>
-                                                <th>Unit</th>
-                                                <th>PID</th>
-                                                <th>Time</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for reading in sensor_readings %}
-                                            <tr>
-                                                <td>{{ reading.name }}</td>
-                                                <td>{{ reading.value }}</td>
-                                                <td>{{ reading.unit }}</td>
-                                                <td><code>{{ reading.pid }}</code></td>
-                                                <td>{{ reading.timestamp.strftime('%H:%M:%S') }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
+<div class="container">
+    <!-- Results Header -->
+    <div class="row results-header">
+        <div class="col-md-9">
+            <h1>
+                <i class="fas fa-clipboard-check me-2"></i> Diagnostic Results
+            </h1>
+            <div class="d-flex align-items-center mt-2">
+                <p class="mb-0 me-3">
+                    <strong>Overall Severity:</strong>
+                    <span class="severity-indicator {% if results.severity %}{{ results.severity }}{% else %}none{% endif %}"></span>
+                    <span class="text-uppercase">{% if results.severity %}{{ results.severity }}{% else %}None{% endif %}</span>
+                </p>
+                <p class="mb-0">
+                    <strong>Date:</strong> {{ session.started_at.strftime('%Y-%m-%d %H:%M') if session and session.started_at else 'Not available' }}
+                </p>
             </div>
         </div>
+        <div class="col-md-3 text-end">
+            <button onclick="window.print()" class="btn btn-secondary print-btn">
+                <i class="fas fa-print me-2"></i> Print
+            </button>
+            <a href="{{ url_for('obd2_dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <!-- Vehicle Info Panel -->
+    <div class="vehicle-info-panel">
+        <div class="row">
+            <div class="col-md-6">
+                <h4><i class="fas fa-car me-2"></i> Vehicle Information</h4>
+                <table class="table table-dark table-sm">
+                    <tbody>
+                        <tr>
+                            <th style="width: 120px;">Make:</th>
+                            <td>{{ vehicle_info.make }}</td>
+                        </tr>
+                        <tr>
+                            <th>Model:</th>
+                            <td>{{ vehicle_info.model }}</td>
+                        </tr>
+                        <tr>
+                            <th>Year:</th>
+                            <td>{{ vehicle_info.year }}</td>
+                        </tr>
+                        <tr>
+                            <th>Mileage:</th>
+                            <td>{{ vehicle_info.mileage }} {% if vehicle_info.mileage %}km{% endif %}</td>
+                        </tr>
+                        {% if vehicle_info.vin %}
+                        <tr>
+                            <th>VIN:</th>
+                            <td>{{ vehicle_info.vin }}</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h4><i class="fas fa-plug me-2"></i> Connection Information</h4>
+                <table class="table table-dark table-sm">
+                    <tbody>
+                        <tr>
+                            <th style="width: 120px;">Protocol:</th>
+                            <td>{{ vehicle_info.protocol or 'Auto' }}</td>
+                        </tr>
+                        <tr>
+                            <th>ECU Name:</th>
+                            <td>{{ vehicle_info.ecu_name or 'Unknown' }}</td>
+                        </tr>
+                        <tr>
+                            <th>DTCs Found:</th>
+                            <td>{{ dtcs|length if dtcs else 0 }}</td>
+                        </tr>
+                        <tr>
+                            <th>Sensor Data:</th>
+                            <td>{{ sensor_readings|length if sensor_readings else 0 }} parameters</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Panel -->
+    <div class="summary-panel">
+        <h3 class="summary-title"><i class="fas fa-chart-pie me-2"></i> Diagnostic Summary</h3>
+        
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="alert {% if results.severity == 'critical' %}alert-danger{% elif results.severity == 'high' %}alert-warning{% elif results.severity == 'medium' %}alert-info{% else %}alert-success{% endif %}">
+                    <h4 class="alert-heading">
+                        {% if results.severity == 'critical' %}
+                            <i class="fas fa-exclamation-triangle me-2"></i> Critical Issues Detected
+                        {% elif results.severity == 'high' %}
+                            <i class="fas fa-exclamation-circle me-2"></i> Significant Issues Detected
+                        {% elif results.severity == 'medium' %}
+                            <i class="fas fa-info-circle me-2"></i> Minor Issues Detected
+                        {% elif results.severity == 'low' %}
+                            <i class="fas fa-check-circle me-2"></i> Minor Issues Detected
+                        {% else %}
+                            <i class="fas fa-check-circle me-2"></i> No Major Issues Detected
+                        {% endif %}
+                    </h4>
+                    
+                    <p class="mb-0">
+                        {% if results.summary %}
+                            {{ results.summary }}
+                        {% elif results.diagnoses %}
+                            {% if results.diagnoses|length > 1 %}
+                                Your vehicle has {{ results.diagnoses|length }} issues that require attention.
+                                {% if results.severity == 'critical' or results.severity == 'high' %}
+                                    We recommend addressing these issues promptly to avoid potential damage or safety concerns.
+                                {% elif results.severity == 'medium' %}
+                                    These issues should be addressed soon, but are not immediately critical.
+                                {% else %}
+                                    These are minor issues that can be addressed during routine maintenance.
+                                {% endif %}
+                            {% elif results.diagnoses|length == 1 %}
+                                Your vehicle has 1 issue: {{ results.diagnoses[0].name }}.
+                                {% if results.severity == 'critical' or results.severity == 'high' %}
+                                    We recommend addressing this issue promptly to avoid potential damage or safety concerns.
+                                {% elif results.severity == 'medium' %}
+                                    This issue should be addressed soon, but is not immediately critical.
+                                {% else %}
+                                    This is a minor issue that can be addressed during routine maintenance.
+                                {% endif %}
+                            {% else %}
+                                No issues were detected during the diagnostic scan.
+                            {% endif %}
+                        {% else %}
+                            No diagnostic data available.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Diagnostic Counts</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">
+                                DTCs Detected
+                                <span class="badge bg-secondary rounded-pill">{{ dtcs|length if dtcs else 0 }}</span>
+                            </li>
+                            <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">
+                                Issues Diagnosed
+                                <span class="badge bg-secondary rounded-pill">{{ results.diagnoses|length if results.diagnoses else 0 }}</span>
+                            </li>
+                            <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">
+                                DIY Repairs
+                                <span class="badge bg-secondary rounded-pill">{{ results.diy_repairs|length if results.diy_repairs else 0 }}</span>
+                            </li>
+                            <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">
+                                Professional Repairs
+                                <span class="badge bg-secondary rounded-pill">{{ results.professional_repairs|length if results.professional_repairs else 0 }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Diagnoses Panel -->
+    {% if results.diagnoses %}
+    <div class="diagnosis-panel">
+        <h3 class="diagnosis-title"><i class="fas fa-stethoscope me-2"></i> Diagnostic Results</h3>
+        <div class="row">
+            {% for diagnosis in results.diagnoses %}
+            <div class="col-md-12">
+                <div class="diagnosis-item {{ diagnosis.severity or 'medium' }}">
+                    <span class="diagnosis-confidence badge bg-secondary">Confidence: {{ (diagnosis.confidence * 100)|int }}%</span>
+                    <h4 class="diagnosis-name">{{ diagnosis.name }}</h4>
+                    <p class="diagnosis-description">{{ diagnosis.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- DIY Repairs Panel -->
+    {% if results.diy_repairs %}
+    <div class="repair-panel">
+        <h3 class="repair-title"><i class="fas fa-wrench me-2"></i> DIY Repair Recommendations</h3>
+        <div class="row">
+            {% for repair in results.diy_repairs %}
+            <div class="col-md-12">
+                <div class="repair-item">
+                    <h4 class="repair-name">{{ repair.repair_name }}</h4>
+                    <div class="repair-info">
+                        <div>
+                            <span class="text-muted me-3">Issue: {{ repair.issue_name }}</span>
+                            <span class="text-muted">Difficulty: 
+                                <span class="difficulty-indicator">
+                                    {% for i in range(5) %}
+                                    <span class="difficulty-dot {% if i < repair.difficulty|default(3) %}active{% endif %}"></span>
+                                    {% endfor %}
+                                </span>
+                            </span>
+                        </div>
+                        {% if repair.estimated_cost %}
+                        <span class="badge badge-cost"><i class="fas fa-coins me-1"></i> Est. Cost: {{ repair.estimated_cost }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="repair-description">{{ repair.description }}</p>
+                    
+                    {% if repair.steps and repair.steps|length > 0 %}
+                    <div class="repair-steps">
+                        <h5><i class="fas fa-tools me-2"></i> Repair Steps:</h5>
+                        <div class="list-group">
+                            {% for step in repair.steps %}
+                            <div class="list-group-item bg-dark border-secondary">
+                                <span class="step-number">{{ loop.index }}.</span> {{ step }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Professional Repairs Panel -->
+    {% if results.professional_repairs %}
+    <div class="repair-panel">
+        <h3 class="repair-title"><i class="fas fa-user-md me-2"></i> Professional Repair Recommendations</h3>
+        <div class="row">
+            {% for repair in results.professional_repairs %}
+            <div class="col-md-12">
+                <div class="repair-item">
+                    <h4 class="repair-name">{{ repair.repair_name }}</h4>
+                    <div class="repair-info">
+                        <span class="text-muted">Issue: {{ repair.issue_name }}</span>
+                        {% if repair.estimated_cost %}
+                        <span class="badge badge-cost"><i class="fas fa-coins me-1"></i> Est. Cost: {{ repair.estimated_cost }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="repair-description">{{ repair.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Safety Warnings Panel -->
+    {% if results.safety_warnings and results.safety_warnings|length > 0 %}
+    <div class="safety-panel">
+        <h3 class="safety-title"><i class="fas fa-exclamation-triangle me-2"></i> Safety Warnings</h3>
+        <div class="row">
+            <div class="col-md-12">
+                {% for warning in results.safety_warnings %}
+                <div class="safety-alert">
+                    <p class="mb-0"><i class="fas fa-exclamation-circle safety-icon"></i> {{ warning.text }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- DTCs Panel -->
+    {% if dtcs and dtcs|length > 0 %}
+    <div class="dtc-panel">
+        <h3 class="dtc-title"><i class="fas fa-microchip me-2"></i> Diagnostic Trouble Codes</h3>
+        <div class="dtc-list">
+            {% for dtc in dtcs %}
+            <div class="dtc-item {{ dtc.severity or 'medium' }}">
+                <span class="dtc-severity {{ dtc.severity or 'medium' }}">{{ dtc.severity or 'Medium' }}</span>
+                <div class="dtc-code">{{ dtc.code }}</div>
+                <div class="dtc-description">{{ dtc.description }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Action Buttons -->
+    <div class="text-center mb-4">
+        <a href="{{ url_for('obd2_dashboard') }}" class="btn btn-primary btn-lg me-2">
+            <i class="fas fa-tachometer-alt me-2"></i> Return to Dashboard
+        </a>
+        <a href="{{ url_for('reset') }}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-power-off me-2"></i> End Session
+        </a>
     </div>
 </div>
 {% endblock %}
@@ -306,14 +676,7 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Download PDF (this would be implemented with a proper PDF generation library)
-        const downloadBtn = document.getElementById('download-report');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                alert('PDF download feature would be implemented in production version.');
-            });
-        }
+        // Any JavaScript needed for the results page
     });
 </script>
 {% endblock %}

@@ -2,166 +2,285 @@
 
 {% block title %}Vehicle Diagnostic{% endblock %}
 
+{% block head %}
+<style>
+    .diagnostic-panel {
+        margin-bottom: 20px;
+    }
+    
+    .input-panel {
+        margin-bottom: 30px;
+    }
+    
+    .camera-panel {
+        position: relative;
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+    
+    #camera-feed {
+        width: 100%;
+        height: auto;
+        background-color: #333;
+        border-radius: 8px;
+    }
+    
+    #camera-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        font-size: 18px;
+        z-index: 10;
+    }
+    
+    .audio-panel {
+        margin: 0 auto;
+        max-width: 640px;
+    }
+    
+    .recording-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background-color: red;
+        border-radius: 50%;
+        margin-right: 8px;
+        animation: blink 1s infinite;
+    }
+    
+    #waveform {
+        width: 100%;
+        height: 100px;
+        background-color: #222;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .controls {
+        margin-top: 15px;
+    }
+    
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    
+    .obd-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .obd-panel h3 {
+        color: #17a2b8;
+        margin-bottom: 20px;
+    }
+    
+    .connection-steps {
+        background-color: #2c3542;
+        border-radius: 8px;
+        padding: 15px;
+    }
+    
+    .detection-card {
+        border-left: 4px solid;
+        margin-bottom: 15px;
+    }
+    
+    .detection-card.high {
+        border-color: #dc3545;
+    }
+    
+    .detection-card.medium {
+        border-color: #fd7e14;
+    }
+    
+    .detection-card.low {
+        border-color: #ffc107;
+    }
+    
+    .detection-card.info {
+        border-color: #17a2b8;
+    }
+    
+    .confidence-badge {
+        float: right;
+    }
+    
+    .progress-slim {
+        height: 5px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10">
-        <div class="card mb-4">
+        <div class="card">
             <div class="card-header bg-primary text-white">
-                <h1 class="mb-0"><i class="fas fa-stethoscope"></i> Vehicle Diagnostic</h1>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="mb-0"><i class="fas fa-car-mechanic"></i> Vehicle Diagnostic</h1>
+                    <div>
+                        <span class="badge bg-success">{{ vehicle_info.year }} {{ vehicle_info.make }} {{ vehicle_info.model }}</span>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
-                <!-- Vehicle Info Card -->
-                <div class="card vehicle-info-card mb-4">
-                    <div class="card-body">
-                        <h4><i class="fas fa-car me-2"></i> Your Vehicle</h4>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <strong>Make:</strong> {{ vehicle_info.make }}
+                <!-- OBD Connection Panel -->
+                <div class="obd-panel diagnostic-panel">
+                    <h3><i class="fas fa-plug me-2"></i> OBD2 Connection</h3>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="connection-steps">
+                                <h5>Connect to your vehicle:</h5>
+                                <ol>
+                                    <li>Plug the OBD2 adapter into the vehicle's port</li>
+                                    <li>Connect the USB end to your device</li>
+                                    <li>Press the Connect button</li>
+                                </ol>
                             </div>
-                            <div class="col-md-3">
-                                <strong>Model:</strong> {{ vehicle_info.model }}
-                            </div>
-                            <div class="col-md-3">
-                                <strong>Year:</strong> {{ vehicle_info.year }}
-                            </div>
-                            <div class="col-md-3">
-                                <strong>Mileage:</strong> {{ vehicle_info.mileage if vehicle_info.mileage else 'Not provided' }}
-                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <img src="https://cdn4.iconfinder.com/data/icons/car-maintenance-2/64/car-plug-connect-fix-512.png" alt="OBD Connector" style="width: 150px; height: auto;">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center justify-content-center">
+                            <a href="{{ url_for('obd2_index') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-link me-2"></i> Connect to OBD2
+                            </a>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Diagnostic Instructions -->
-                <div class="alert alert-info mb-4">
-                    <h4><i class="fas fa-info-circle me-2"></i> Instructions</h4>
-                    <p>Please provide information about your vehicle problem using one or both of the following methods:</p>
-                    <ol>
-                        <li><strong>Camera Analysis:</strong> Take a picture of warning lights, visible damage, or fluid leaks.</li>
-                        <li><strong>Voice Description:</strong> Describe the symptoms, sounds, or behaviors you've noticed.</li>
-                    </ol>
-                    <p>The more information you provide, the more accurate the diagnosis will be.</p>
-                </div>
-                
-                <!-- Input Method Tabs -->
-                <div class="d-flex justify-content-center mb-4">
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-primary active" data-toggle-input="camera">
+                <!-- Input Methods Tabs -->
+                <ul class="nav nav-tabs" id="diagnosticTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="camera-tab" data-bs-toggle="tab" data-bs-target="#camera-panel" type="button" role="tab" aria-controls="camera-panel" aria-selected="true">
                             <i class="fas fa-camera me-2"></i> Camera
                         </button>
-                        <button type="button" class="btn btn-primary" data-toggle-input="voice">
-                            <i class="fas fa-microphone me-2"></i> Voice
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="audio-tab" data-bs-toggle="tab" data-bs-target="#audio-panel" type="button" role="tab" aria-controls="audio-panel" aria-selected="false">
+                            <i class="fas fa-microphone me-2"></i> Audio
                         </button>
-                    </div>
-                </div>
+                    </li>
+                </ul>
                 
-                <!-- Camera Input Section -->
-                <div id="camera-section" class="input-section">
-                    <h3 class="mb-3 text-center">Camera Analysis</h3>
-                    
-                    <!-- Camera status alert -->
-                    <div id="camera-status" class="alert alert-info mb-3">
-                        Click "Start Camera" to begin.
-                    </div>
-                    
-                    <!-- Camera guidance -->
-                    <div id="camera-guidance" class="alert alert-secondary mb-3" style="display: none;">
-                        <h5><i class="fas fa-lightbulb me-2"></i> Tips for good photos:</h5>
-                        <ul>
-                            <li>Ensure good lighting</li>
-                            <li>Focus on the problem area</li>
-                            <li>Hold the camera steady</li>
-                            <li>For dashboard lights, turn the ignition to the "on" position</li>
-                        </ul>
-                    </div>
-                    
-                    <!-- Camera viewport -->
-                    <div id="video-container" class="mb-3">
-                        <video id="video" autoplay playsinline></video>
-                        <canvas id="canvas"></canvas>
-                        <img id="image-preview" alt="Captured image">
-                    </div>
-                    
-                    <!-- Camera controls -->
-                    <div class="d-flex justify-content-center mb-4">
-                        <button id="start-camera" class="btn btn-primary me-2">
-                            <i class="fas fa-camera me-2"></i> Start Camera
-                        </button>
-                        <button id="stop-camera" class="btn btn-secondary me-2" style="display: none;">
-                            <i class="fas fa-stop me-2"></i> Stop Camera
-                        </button>
-                        <button id="capture-btn" class="btn btn-success me-2" disabled>
-                            <i class="fas fa-camera-retro me-2"></i> Take Photo
-                        </button>
-                        <button id="upload-btn" class="btn btn-info" disabled>
-                            <i class="fas fa-upload me-2"></i> Analyze Image
-                        </button>
-                    </div>
-                    
-                    <!-- Image Results -->
-                    <div id="results-container" class="mt-4" style="display: none;">
-                        <h4 class="mb-3">Analysis Results:</h4>
-                        <div id="image-results" class="mb-4">
-                            <!-- Results will be dynamically inserted here -->
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Voice Input Section -->
-                <div id="voice-section" class="input-section" style="display: none;">
-                    <h3 class="mb-3 text-center">Voice Description</h3>
-                    
-                    <!-- Recording status alert -->
-                    <div id="recording-status" class="alert alert-info mb-3">
-                        Click "Start Recording" to describe your vehicle's symptoms.
-                    </div>
-                    
-                    <!-- Recording guidance -->
-                    <div id="recording-guidance" class="alert alert-secondary mb-3" style="display: none;">
-                        <h5><i class="fas fa-lightbulb me-2"></i> Tips for good descriptions:</h5>
-                        <ul>
-                            <li>Speak clearly and at a normal pace</li>
-                            <li>Describe when symptoms occur (e.g., "only when braking")</li>
-                            <li>Include any sounds, smells, or feelings you've noticed</li>
-                            <li>Mention when the problem started</li>
-                        </ul>
-                    </div>
-                    
-                    <!-- Recording interface -->
-                    <div class="text-center mb-4">
-                        <div class="mb-3">
-                            <span id="recording-time" class="badge bg-danger p-2 fs-5">00:00</span>
+                <div class="tab-content p-3 border border-top-0 rounded-bottom mb-4" id="diagnosticTabsContent">
+                    <!-- Camera Panel -->
+                    <div class="tab-pane fade show active input-panel" id="camera-panel" role="tabpanel" aria-labelledby="camera-tab">
+                        <h3>Take a photo of the problem area</h3>
+                        <p class="text-muted">Position your camera to clearly show the component or area you want to diagnose.</p>
+                        
+                        <div class="camera-panel">
+                            <video id="camera-feed" autoplay playsinline></video>
+                            <div id="camera-overlay">Click "Start Camera" to begin</div>
+                            <canvas id="capture-canvas" style="display:none;"></canvas>
                         </div>
                         
-                        <div class="d-flex justify-content-center mb-4">
-                            <button id="start-record" class="btn btn-primary me-2">
-                                <i class="fas fa-microphone me-2"></i> Start Recording
+                        <div class="controls text-center mt-3">
+                            <button id="start-camera" class="btn btn-primary">
+                                <i class="fas fa-video me-2"></i> Start Camera
                             </button>
-                            <button id="stop-record" class="btn btn-danger me-2" style="display: none;">
-                                <i class="fas fa-stop me-2"></i> Stop Recording
+                            <button id="capture-photo" class="btn btn-success" disabled>
+                                <i class="fas fa-camera me-2"></i> Take Photo
                             </button>
-                            <button id="submit-audio" class="btn btn-info" disabled>
-                                <i class="fas fa-paper-plane me-2"></i> Submit Description
+                            <button id="retake-photo" class="btn btn-secondary" disabled>
+                                <i class="fas fa-redo me-2"></i> Retake
                             </button>
+                        </div>
+                        
+                        <div class="mt-3" id="capture-result" style="display:none;">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i> Image captured successfully!
+                            </div>
+                            <div class="text-center">
+                                <img id="captured-image" class="img-fluid img-thumbnail" style="max-height: 300px;">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3" id="analysis-result" style="display:none;">
+                            <!-- Image analysis results will be displayed here -->
                         </div>
                     </div>
                     
-                    <!-- Voice Results -->
-                    <div id="results-container" class="mt-4" style="display: none;">
-                        <h4 class="mb-3">Analysis Results:</h4>
-                        <div id="voice-results" class="mb-4">
-                            <!-- Results will be dynamically inserted here -->
+                    <!-- Audio Panel -->
+                    <div class="tab-pane fade input-panel" id="audio-panel" role="tabpanel" aria-labelledby="audio-tab">
+                        <h3>Record the sound your vehicle is making</h3>
+                        <p class="text-muted">Try to minimize background noise and position your microphone close to the source of the sound.</p>
+                        
+                        <div class="audio-panel">
+                            <div id="waveform"></div>
+                            
+                            <div class="alert alert-info" id="audio-instructions">
+                                <i class="fas fa-info-circle me-2"></i> Press "Start Recording" and capture the sound for at least 5 seconds.
+                            </div>
+                            
+                            <div id="recording-indicator" style="display:none;">
+                                <div class="alert alert-danger">
+                                    <span class="recording-indicator"></span> Recording in progress...
+                                    <span id="recording-time">0:00</span>
+                                </div>
+                            </div>
+                            
+                            <div class="controls text-center mt-3">
+                                <button id="start-recording" class="btn btn-primary">
+                                    <i class="fas fa-microphone me-2"></i> Start Recording
+                                </button>
+                                <button id="stop-recording" class="btn btn-danger" disabled>
+                                    <i class="fas fa-stop me-2"></i> Stop Recording
+                                </button>
+                                <button id="play-audio" class="btn btn-secondary" disabled>
+                                    <i class="fas fa-play me-2"></i> Play Recording
+                                </button>
+                                <button id="redo-recording" class="btn btn-secondary" disabled>
+                                    <i class="fas fa-redo me-2"></i> Record Again
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3" id="audio-analysis-result" style="display:none;">
+                            <!-- Audio analysis results will be displayed here -->
                         </div>
                     </div>
                 </div>
                 
-                <!-- Continue to Results Button -->
-                <form id="analysis-form" action="/analyze" method="post">
-                    <div class="text-center mt-4">
-                        <button id="continue-btn" type="submit" class="btn btn-success btn-lg px-5" style="display: none;">
-                            <i class="fas fa-diagnoses me-2"></i> Complete Diagnosis
-                        </button>
+                <!-- Diagnostic Analysis Panel -->
+                <div id="diagnostic-panel" style="display:none;">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="mb-0"><i class="fas fa-stethoscope me-2"></i> Diagnostic Analysis</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="lead mt-2">Analyzing diagnostic data...</p>
+                            </div>
+                        </div>
                     </div>
-                </form>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <button id="analyze-btn" class="btn btn-primary btn-lg" disabled>
+                        <i class="fas fa-search me-2"></i> Analyze
+                    </button>
+                    <button id="reset-btn" class="btn btn-secondary btn-lg ms-2">
+                        <i class="fas fa-redo me-2"></i> Reset
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -169,9 +288,464 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Camera JavaScript -->
-<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
-
-<!-- Voice JavaScript -->
-<script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Camera elements
+        const cameraFeed = document.getElementById('camera-feed');
+        const cameraOverlay = document.getElementById('camera-overlay');
+        const captureCanvas = document.getElementById('capture-canvas');
+        const startCameraBtn = document.getElementById('start-camera');
+        const capturePhotoBtn = document.getElementById('capture-photo');
+        const retakePhotoBtn = document.getElementById('retake-photo');
+        const captureResult = document.getElementById('capture-result');
+        const capturedImage = document.getElementById('captured-image');
+        const analysisResult = document.getElementById('analysis-result');
+        
+        // Audio elements
+        const startRecordingBtn = document.getElementById('start-recording');
+        const stopRecordingBtn = document.getElementById('stop-recording');
+        const playAudioBtn = document.getElementById('play-audio');
+        const redoRecordingBtn = document.getElementById('redo-recording');
+        const recordingIndicator = document.getElementById('recording-indicator');
+        const recordingTime = document.getElementById('recording-time');
+        const audioInstructions = document.getElementById('audio-instructions');
+        const audioAnalysisResult = document.getElementById('audio-analysis-result');
+        
+        // Action buttons
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const diagnosticPanel = document.getElementById('diagnostic-panel');
+        
+        // Variables
+        let stream = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordingInterval = null;
+        let recordingSeconds = 0;
+        let audioBlob = null;
+        let audioURL = null;
+        let audioPlayer = null;
+        let imageData = null;
+        let hasImage = false;
+        let hasAudio = false;
+        
+        // Start camera
+        startCameraBtn.addEventListener('click', async function() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' }
+                });
+                cameraFeed.srcObject = stream;
+                cameraOverlay.style.display = 'none';
+                startCameraBtn.disabled = true;
+                capturePhotoBtn.disabled = false;
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                cameraOverlay.innerHTML = 'Camera access denied or not available';
+            }
+        });
+        
+        // Capture photo
+        capturePhotoBtn.addEventListener('click', function() {
+            const context = captureCanvas.getContext('2d');
+            captureCanvas.width = cameraFeed.videoWidth;
+            captureCanvas.height = cameraFeed.videoHeight;
+            context.drawImage(cameraFeed, 0, 0, captureCanvas.width, captureCanvas.height);
+            
+            // Get image data
+            imageData = captureCanvas.toDataURL('image/jpeg');
+            capturedImage.src = imageData;
+            
+            // Show result
+            captureResult.style.display = 'block';
+            capturePhotoBtn.disabled = true;
+            retakePhotoBtn.disabled = false;
+            
+            // Stop camera stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            hasImage = true;
+            updateAnalyzeButton();
+        });
+        
+        // Retake photo
+        retakePhotoBtn.addEventListener('click', async function() {
+            captureResult.style.display = 'none';
+            analysisResult.style.display = 'none';
+            capturePhotoBtn.disabled = false;
+            
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' }
+                });
+                cameraFeed.srcObject = stream;
+                cameraOverlay.style.display = 'none';
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                cameraOverlay.style.display = 'flex';
+                cameraOverlay.innerHTML = 'Camera access denied or not available';
+            }
+            
+            hasImage = false;
+            updateAnalyzeButton();
+        });
+        
+        // Start recording
+        startRecordingBtn.addEventListener('click', async function() {
+            try {
+                const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(audioStream);
+                audioChunks = [];
+                
+                mediaRecorder.addEventListener('dataavailable', function(event) {
+                    audioChunks.push(event.data);
+                });
+                
+                mediaRecorder.addEventListener('stop', function() {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioURL = URL.createObjectURL(audioBlob);
+                    
+                    if (audioPlayer) {
+                        audioPlayer.pause();
+                        audioPlayer.src = audioURL;
+                    } else {
+                        audioPlayer = new Audio(audioURL);
+                    }
+                    
+                    playAudioBtn.disabled = false;
+                    redoRecordingBtn.disabled = false;
+                    startRecordingBtn.disabled = false;
+                    stopRecordingBtn.disabled = true;
+                    
+                    recordingIndicator.style.display = 'none';
+                    clearInterval(recordingInterval);
+                    
+                    hasAudio = true;
+                    updateAnalyzeButton();
+                });
+                
+                // Start recording
+                mediaRecorder.start();
+                startRecordingBtn.disabled = true;
+                stopRecordingBtn.disabled = false;
+                recordingIndicator.style.display = 'block';
+                audioInstructions.style.display = 'none';
+                
+                // Recording timer
+                recordingSeconds = 0;
+                updateRecordingTime();
+                recordingInterval = setInterval(updateRecordingTime, 1000);
+                
+            } catch (err) {
+                console.error('Error accessing microphone:', err);
+                alert('Could not access microphone. Please check permissions.');
+            }
+        });
+        
+        // Update recording time
+        function updateRecordingTime() {
+            recordingSeconds++;
+            const minutes = Math.floor(recordingSeconds / 60);
+            const seconds = recordingSeconds % 60;
+            recordingTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Stop recording
+        stopRecordingBtn.addEventListener('click', function() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        });
+        
+        // Play audio
+        playAudioBtn.addEventListener('click', function() {
+            if (audioPlayer) {
+                audioPlayer.play();
+            }
+        });
+        
+        // Record again
+        redoRecordingBtn.addEventListener('click', function() {
+            if (audioPlayer) {
+                audioPlayer.pause();
+            }
+            audioAnalysisResult.style.display = 'none';
+            startRecordingBtn.disabled = false;
+            playAudioBtn.disabled = true;
+            redoRecordingBtn.disabled = true;
+            audioInstructions.style.display = 'block';
+            
+            hasAudio = false;
+            updateAnalyzeButton();
+        });
+        
+        // Update analyze button state
+        function updateAnalyzeButton() {
+            analyzeBtn.disabled = !(hasImage || hasAudio);
+        }
+        
+        // Analyze button
+        analyzeBtn.addEventListener('click', function() {
+            // Show diagnostic panel
+            diagnosticPanel.style.display = 'block';
+            analyzeBtn.disabled = true;
+            
+            // Prepare form data for submission
+            const formData = new FormData();
+            
+            // Add image if available
+            if (hasImage && imageData) {
+                // Convert base64 to blob
+                const imageBlob = dataURItoBlob(imageData);
+                formData.append('image', imageBlob, 'image.jpg');
+                
+                // Process image
+                fetch('/process-image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Display image analysis results
+                    displayImageResults(data);
+                })
+                .catch(error => {
+                    console.error('Error processing image:', error);
+                    analysisResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i> Error processing image: ${error}
+                        </div>
+                    `;
+                    analysisResult.style.display = 'block';
+                });
+            }
+            
+            // Add audio if available
+            if (hasAudio && audioBlob) {
+                const audioFormData = new FormData();
+                audioFormData.append('audio', audioBlob, 'recording.wav');
+                
+                // Process audio
+                fetch('/process-voice', {
+                    method: 'POST',
+                    body: audioFormData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Display audio analysis results
+                    displayAudioResults(data);
+                })
+                .catch(error => {
+                    console.error('Error processing audio:', error);
+                    audioAnalysisResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i> Error processing audio: ${error}
+                        </div>
+                    `;
+                    audioAnalysisResult.style.display = 'block';
+                });
+            }
+            
+            // Send both to be processed together
+            setTimeout(() => {
+                fetch('/analyze', {
+                    method: 'POST'
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error analyzing data:', error);
+                    diagnosticPanel.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i> Error analyzing data: ${error}
+                        </div>
+                    `;
+                });
+            }, 2000);
+        });
+        
+        // Reset button
+        resetBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to reset? All diagnostic data will be lost.')) {
+                fetch('/reset', {
+                    method: 'POST'
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        window.location.reload();
+                    }
+                });
+            }
+        });
+        
+        // Display image analysis results
+        function displayImageResults(data) {
+            if (data.error) {
+                analysisResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i> ${data.error}
+                    </div>
+                `;
+            } else {
+                let html = '<h4 class="mt-3">Image Analysis Results</h4>';
+                
+                if (data.potential_issues && data.potential_issues.length > 0) {
+                    html += '<div class="alert alert-warning">';
+                    html += '<h5><i class="fas fa-exclamation-triangle me-2"></i> Potential Issues Detected</h5>';
+                    html += '<ul>';
+                    data.potential_issues.forEach(issue => {
+                        html += `<li>${issue}</li>`;
+                    });
+                    html += '</ul>';
+                    html += '</div>';
+                } else {
+                    html += `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> No obvious issues detected in the image.
+                        </div>
+                    `;
+                }
+                
+                // Show detailed detection results if available
+                if (data.detected_objects && data.detected_objects.length > 0) {
+                    html += '<h5>Detected Items:</h5>';
+                    html += '<div class="row">';
+                    
+                    data.detected_objects.forEach(object => {
+                        const confidence = data.confidence_scores[object] || 0.5;
+                        const confidencePercent = Math.round(confidence * 100);
+                        
+                        let severity = 'info';
+                        if (confidence > 0.8) severity = 'high';
+                        else if (confidence > 0.6) severity = 'medium';
+                        else if (confidence > 0.4) severity = 'low';
+                        
+                        html += `
+                            <div class="col-md-6">
+                                <div class="card detection-card ${severity} mb-2">
+                                    <div class="card-body">
+                                        <h6>${object.replace('_', ' ')}
+                                            <span class="badge bg-secondary confidence-badge">${confidencePercent}%</span>
+                                        </h6>
+                                        <div class="progress progress-slim">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: ${confidencePercent}%" 
+                                                aria-valuenow="${confidencePercent}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                }
+                
+                analysisResult.innerHTML = html;
+            }
+            
+            analysisResult.style.display = 'block';
+        }
+        
+        // Display audio analysis results
+        function displayAudioResults(data) {
+            if (data.error) {
+                audioAnalysisResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i> ${data.error}
+                    </div>
+                `;
+            } else {
+                let html = '<h4 class="mt-3">Audio Analysis Results</h4>';
+                
+                // Show transcript if available
+                if (data.transcript) {
+                    html += `
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-comment me-2"></i> Transcript</h5>
+                            <p>"${data.transcript}"</p>
+                        </div>
+                    `;
+                }
+                
+                if (data.potential_issues && data.potential_issues.length > 0) {
+                    html += '<div class="alert alert-warning">';
+                    html += '<h5><i class="fas fa-exclamation-triangle me-2"></i> Detected Sound Issues</h5>';
+                    html += '<ul>';
+                    data.potential_issues.forEach(issue => {
+                        html += `<li>${issue}</li>`;
+                    });
+                    html += '</ul>';
+                    html += '</div>';
+                } else {
+                    html += `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> No obvious sound issues detected.
+                        </div>
+                    `;
+                }
+                
+                // Show detected sounds if available
+                if (data.detected_sounds && data.detected_sounds.length > 0) {
+                    html += '<h5>Detected Sounds:</h5>';
+                    html += '<div class="row">';
+                    
+                    data.detected_sounds.forEach(sound => {
+                        const confidence = data.confidence_scores[sound] || 0.5;
+                        const confidencePercent = Math.round(confidence * 100);
+                        
+                        let severity = 'info';
+                        if (confidence > 0.8) severity = 'high';
+                        else if (confidence > 0.6) severity = 'medium';
+                        else if (confidence > 0.4) severity = 'low';
+                        
+                        html += `
+                            <div class="col-md-6">
+                                <div class="card detection-card ${severity} mb-2">
+                                    <div class="card-body">
+                                        <h6>${sound.replace('_', ' ')}
+                                            <span class="badge bg-secondary confidence-badge">${confidencePercent}%</span>
+                                        </h6>
+                                        <div class="progress progress-slim">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: ${confidencePercent}%" 
+                                                aria-valuenow="${confidencePercent}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                }
+                
+                audioAnalysisResult.innerHTML = html;
+            }
+            
+            audioAnalysisResult.style.display = 'block';
+        }
+        
+        // Helper function to convert data URI to Blob
+        function dataURItoBlob(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            
+            return new Blob([ab], { type: mimeString });
+        }
+    });
+</script>
 {% endblock %}

@@ -2,133 +2,607 @@
 
 {% block title %}OBD2 Dashboard{% endblock %}
 
+{% block head %}
+<style>
+    .dashboard-header {
+        margin-bottom: 20px;
+    }
+    
+    .vehicle-info-card {
+        background-color: #232b36;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .connection-status {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+    
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 10px;
+    }
+    
+    .status-indicator.connected {
+        background-color: #28a745;
+        box-shadow: 0 0 10px #28a745;
+    }
+    
+    .gauge-container {
+        width: 100%;
+        height: 200px;
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .gauge-card {
+        height: 100%;
+        background-color: #232b36;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .gauge-title {
+        position: absolute;
+        bottom: 15px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 14px;
+        color: #fff;
+        z-index: 10;
+    }
+    
+    .gauge-value {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        transform: translateY(-50%);
+        color: #fff;
+        z-index: 10;
+    }
+    
+    .gauge-unit {
+        font-size: 14px;
+        color: #aaa;
+    }
+    
+    .sensor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .sensor-card {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 15px;
+        position: relative;
+    }
+    
+    .sensor-card-title {
+        margin-bottom: 10px;
+        color: #17a2b8;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    
+    .sensor-card-value {
+        font-size: 22px;
+        font-weight: bold;
+    }
+    
+    .sensor-card-unit {
+        font-size: 14px;
+        color: #aaa;
+        margin-left: 5px;
+    }
+    
+    .dtc-panel {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .dtc-title {
+        margin-bottom: 15px;
+        color: #17a2b8;
+    }
+    
+    .dtc-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .dtc-item {
+        background-color: #2c3542;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        padding: 15px;
+        border-left: 4px solid;
+    }
+    
+    .dtc-item.critical {
+        border-color: #dc3545;
+    }
+    
+    .dtc-item.high {
+        border-color: #fd7e14;
+    }
+    
+    .dtc-item.medium {
+        border-color: #ffc107;
+    }
+    
+    .dtc-item.low {
+        border-color: #28a745;
+    }
+    
+    .dtc-code {
+        font-family: monospace;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    
+    .dtc-description {
+        margin-top: 5px;
+        font-size: 14px;
+    }
+    
+    .dtc-severity {
+        float: right;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    
+    .dtc-severity.critical {
+        background-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+    
+    .dtc-severity.high {
+        background-color: rgba(253, 126, 20, 0.2);
+        color: #fd7e14;
+    }
+    
+    .dtc-severity.medium {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+    
+    .dtc-severity.low {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+    
+    .action-btn {
+        margin-right: 10px;
+    }
+    
+    .refresh-icon {
+        margin-left: 10px;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+    
+    .refresh-icon:hover {
+        transform: rotate(90deg);
+    }
+    
+    .refresh-icon.refreshing {
+        animation: rotate 1s infinite linear;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .chart-container {
+        height: 300px;
+        margin-bottom: 20px;
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 15px;
+    }
+    
+    .tab-content {
+        padding-top: 20px;
+    }
+    
+    .scan-progress {
+        height: 25px;
+        margin-bottom: 20px;
+    }
+    
+    .freeze-frame-data {
+        background-color: #232b36;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .freeze-frame-title {
+        margin-bottom: 15px;
+        color: #17a2b8;
+    }
+    
+    .freeze-frame-table {
+        margin-bottom: 0;
+    }
+    
+    .freeze-frame-table th {
+        border-top: none;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-11">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h1 class="mb-0"><i class="fas fa-tachometer-alt"></i> OBD2 Dashboard</h1>
-                    <div>
-                        <span class="badge bg-success" id="connection-status">Connected</span>
+<div class="container-fluid">
+    <!-- Dashboard Header -->
+    <div class="row dashboard-header">
+        <div class="col-md-6">
+            <h1><i class="fas fa-tachometer-alt me-2"></i> OBD2 Dashboard</h1>
+            <div class="connection-status">
+                <span class="status-indicator connected"></span>
+                <span>Connected to: {{ vehicle_info.make }} {{ vehicle_info.model }} ({{ vehicle_info.year }})</span>
+                <a href="#" class="ms-3" data-bs-toggle="modal" data-bs-target="#connectionInfoModal">
+                    <i class="fas fa-info-circle"></i> Connection Info
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('obd2_scan') }}" class="btn btn-primary action-btn">
+                <i class="fas fa-search me-2"></i> Scan for DTCs
+            </a>
+            <a href="{{ url_for('reset') }}" class="btn btn-secondary action-btn">
+                <i class="fas fa-power-off me-2"></i> Disconnect
+            </a>
+            <button id="refresh-data" class="btn btn-info">
+                <i class="fas fa-sync-alt me-2"></i> Refresh Data
+            </button>
+        </div>
+    </div>
+    
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="realtime-tab" data-bs-toggle="tab" data-bs-target="#realtime" type="button" role="tab" aria-controls="realtime" aria-selected="true">
+                <i class="fas fa-chart-line me-2"></i> Real-Time Data
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="dtc-tab" data-bs-toggle="tab" data-bs-target="#dtc" type="button" role="tab" aria-controls="dtc" aria-selected="false">
+                <i class="fas fa-exclamation-triangle me-2"></i> Trouble Codes
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+                <i class="fas fa-history me-2"></i> History
+            </button>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="dashboardTabsContent">
+        <!-- Real-Time Data Tab -->
+        <div class="tab-pane fade show active" id="realtime" role="tabpanel" aria-labelledby="realtime-tab">
+            <!-- Main Gauges -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="gauge-container">
+                        <div class="gauge-card">
+                            <canvas id="rpmGauge"></canvas>
+                            <div class="gauge-value">
+                                <span id="rpmValue">0</span>
+                                <span class="gauge-unit">RPM</span>
+                            </div>
+                            <div class="gauge-title">Engine Speed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="gauge-container">
+                        <div class="gauge-card">
+                            <canvas id="speedGauge"></canvas>
+                            <div class="gauge-value">
+                                <span id="speedValue">0</span>
+                                <span class="gauge-unit">km/h</span>
+                            </div>
+                            <div class="gauge-title">Vehicle Speed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="gauge-container">
+                        <div class="gauge-card">
+                            <canvas id="loadGauge"></canvas>
+                            <div class="gauge-value">
+                                <span id="loadValue">0</span>
+                                <span class="gauge-unit">%</span>
+                            </div>
+                            <div class="gauge-title">Engine Load</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="gauge-container">
+                        <div class="gauge-card">
+                            <canvas id="tempGauge"></canvas>
+                            <div class="gauge-value">
+                                <span id="tempValue">0</span>
+                                <span class="gauge-unit">°C</span>
+                            </div>
+                            <div class="gauge-title">Coolant Temperature</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Vehicle Information</h3>
-                            </div>
-                            <div class="card-body">
-                                <table class="table">
-                                    <tbody>
-                                        <tr>
-                                            <th style="width: 30%">Make:</th>
-                                            <td>{{ vehicle.make }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Model:</th>
-                                            <td>{{ vehicle.model }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Year:</th>
-                                            <td>{{ vehicle.year }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Mileage:</th>
-                                            <td>{{ vehicle.mileage|default('N/A', true) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>VIN:</th>
-                                            <td id="vehicle-vin">{{ vehicle.vin|default('Pending scan...', true) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>ECU:</th>
-                                            <td id="vehicle-ecu">{{ vehicle.ecu_name|default('Pending scan...', true) }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Protocol:</th>
-                                            <td id="vehicle-protocol">{{ vehicle.protocol|default('Pending scan...', true) }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            
+            <!-- Real-time Chart -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="chart-container">
+                        <canvas id="realtimeChart"></canvas>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Diagnostic Tools</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <button id="scan-btn" class="btn btn-primary w-100 h-100 py-3">
-                                            <i class="fas fa-search fa-2x mb-2"></i><br>
-                                            Scan for Trouble Codes
-                                        </button>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <button id="live-data-btn" class="btn btn-info w-100 h-100 py-3">
-                                            <i class="fas fa-chart-line fa-2x mb-2"></i><br>
-                                            View Live Data
-                                        </button>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <button id="clear-codes-btn" class="btn btn-warning w-100 h-100 py-3" disabled>
-                                            <i class="fas fa-eraser fa-2x mb-2"></i><br>
-                                            Clear Trouble Codes
-                                        </button>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <button id="disconnect-btn" class="btn btn-danger w-100 h-100 py-3">
-                                            <i class="fas fa-power-off fa-2x mb-2"></i><br>
-                                            Disconnect
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                </div>
+            </div>
+            
+            <!-- Sensor Readings -->
+            <div class="row">
+                <div class="col-md-12">
+                    <h4>
+                        <i class="fas fa-microchip me-2"></i> Sensor Readings
+                        <i class="fas fa-sync-alt refresh-icon" id="refresh-sensors"></i>
+                    </h4>
+                    <div class="sensor-grid" id="sensors-container">
+                        <!-- Sensors will be dynamically populated -->
+                        <div class="sensor-card">
+                            <div class="sensor-card-title">Intake Air Temperature</div>
+                            <div class="sensor-card-value">24<span class="sensor-card-unit">°C</span></div>
+                        </div>
+                        <div class="sensor-card">
+                            <div class="sensor-card-title">Mass Air Flow</div>
+                            <div class="sensor-card-value">13.2<span class="sensor-card-unit">g/s</span></div>
+                        </div>
+                        <div class="sensor-card">
+                            <div class="sensor-card-title">Throttle Position</div>
+                            <div class="sensor-card-value">17<span class="sensor-card-unit">%</span></div>
+                        </div>
+                        <div class="sensor-card">
+                            <div class="sensor-card-title">Fuel Level</div>
+                            <div class="sensor-card-value">76<span class="sensor-card-unit">%</span></div>
+                        </div>
+                        <div class="sensor-card">
+                            <div class="sensor-card-title">Timing Advance</div>
+                            <div class="sensor-card-value">12.5<span class="sensor-card-unit">°</span></div>
+                        </div>
+                        <div class="sensor-card">
+                            <div class="sensor-card-title">O2 Sensor Voltage</div>
+                            <div class="sensor-card-value">0.85<span class="sensor-card-unit">V</span></div>
+                        </div>
+                        <div class="sensor-card">
+                            <div class="sensor-card-title">Fuel Pressure</div>
+                            <div class="sensor-card-value">380<span class="sensor-card-unit">kPa</span></div>
+                        </div>
+                        <div class="sensor-card">
+                            <div class="sensor-card-title">Barometric Pressure</div>
+                            <div class="sensor-card-value">101<span class="sensor-card-unit">kPa</span></div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h3>Live Sensor Data</h3>
-                                    <span class="badge bg-secondary" id="update-status">Not running</span>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="sensor-data-loading" class="text-center p-5 d-none">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                    <p class="mt-3">Reading sensor data...</p>
-                                </div>
-                                
-                                <div id="no-data-message" class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i> Click "View Live Data" to start monitoring real-time sensor information.
-                                </div>
-                                
-                                <div id="sensor-data-container" class="row d-none">
-                                    <!-- Template for sensor data items -->
-                                    <div class="col-md-3 mb-3 sensor-item">
-                                        <div class="card">
-                                            <div class="card-body text-center">
-                                                <h5 class="sensor-name">RPM</h5>
-                                                <div class="sensor-value display-5">0</div>
-                                                <div class="sensor-unit text-muted">rpm</div>
-                                            </div>
-                                        </div>
-                                    </div>
+            </div>
+        </div>
+        
+        <!-- Trouble Codes Tab -->
+        <div class="tab-pane fade" id="dtc" role="tabpanel" aria-labelledby="dtc-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3><i class="fas fa-exclamation-triangle me-2"></i> Diagnostic Trouble Codes</h3>
+                        <div>
+                            <button id="refresh-dtc" class="btn btn-info me-2">
+                                <i class="fas fa-sync-alt me-2"></i> Refresh
+                            </button>
+                            <button id="clear-dtc" class="btn btn-warning">
+                                <i class="fas fa-trash-alt me-2"></i> Clear DTCs
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- DTC Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-white bg-danger">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Critical</h5>
+                                    <p class="card-text display-4" id="critical-count">0</p>
                                 </div>
                             </div>
                         </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-warning">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">High</h5>
+                                    <p class="card-text display-4" id="high-count">2</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-info">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Medium</h5>
+                                    <p class="card-text display-4" id="medium-count">1</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Low</h5>
+                                    <p class="card-text display-4" id="low-count">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- DTC List -->
+                    <div class="dtc-panel">
+                        <h4 class="dtc-title">Current Trouble Codes</h4>
+                        <div class="dtc-list" id="dtc-container">
+                            <!-- DTC items will be populated dynamically -->
+                            <div class="dtc-item high">
+                                <span class="dtc-severity high">High</span>
+                                <div class="dtc-code">P0301</div>
+                                <div class="dtc-description">Cylinder 1 Misfire Detected</div>
+                            </div>
+                            <div class="dtc-item high">
+                                <span class="dtc-severity high">High</span>
+                                <div class="dtc-code">P0420</div>
+                                <div class="dtc-description">Catalyst System Efficiency Below Threshold (Bank 1)</div>
+                            </div>
+                            <div class="dtc-item medium">
+                                <span class="dtc-severity medium">Medium</span>
+                                <div class="dtc-code">P0171</div>
+                                <div class="dtc-description">System Too Lean (Bank 1)</div>
+                            </div>
+                            
+                            <!-- Empty state -->
+                            <div id="empty-dtc" class="text-center py-4" style="display: none;">
+                                <i class="fas fa-check-circle text-success" style="font-size: 48px;"></i>
+                                <p class="lead mt-3">No trouble codes detected</p>
+                                <p class="text-muted">Your vehicle's diagnostic system is not reporting any errors.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Freeze Frame Data -->
+                    <div class="freeze-frame-data">
+                        <h4 class="freeze-frame-title">Freeze Frame Data</h4>
+                        <p class="text-muted mb-3">This data shows the vehicle conditions when the DTC was set.</p>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped freeze-frame-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Value</th>
+                                        <th>Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>DTC that caused freeze frame</td>
+                                        <td>P0301</td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Engine RPM</td>
+                                        <td>2150</td>
+                                        <td>RPM</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Vehicle Speed</td>
+                                        <td>45</td>
+                                        <td>km/h</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Engine Load</td>
+                                        <td>62</td>
+                                        <td>%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Coolant Temperature</td>
+                                        <td>85</td>
+                                        <td>°C</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Short Term Fuel Trim</td>
+                                        <td>10.5</td>
+                                        <td>%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Long Term Fuel Trim</td>
+                                        <td>8.2</td>
+                                        <td>%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Intake Air Temperature</td>
+                                        <td>22</td>
+                                        <td>°C</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- History Tab -->
+        <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3><i class="fas fa-history me-2"></i> Diagnostic History</h3>
+                    <p class="text-muted">View past diagnostic sessions and their results.</p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>DTCs Found</th>
+                                    <th>Severity</th>
+                                    <th>Duration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if diagnostic_sessions %}
+                                    {% for session in diagnostic_sessions %}
+                                    <tr>
+                                        <td>{{ session.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ session.dtcs|length }} code(s)</td>
+                                        <td>
+                                            {% if session.severity == 'critical' %}
+                                            <span class="badge bg-danger">Critical</span>
+                                            {% elif session.severity == 'high' %}
+                                            <span class="badge bg-warning text-dark">High</span>
+                                            {% elif session.severity == 'medium' %}
+                                            <span class="badge bg-info text-dark">Medium</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Low</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ session.duration }} min</td>
+                                        <td>
+                                            <a href="{{ url_for('obd2_results', session_id=session.id) }}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No diagnostic history available</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -136,51 +610,79 @@
     </div>
 </div>
 
-<!-- Scan in progress modal -->
-<div class="modal fade" id="scanModal" tabindex="-1" aria-labelledby="scanModalLabel" aria-hidden="true">
+<!-- Connection Info Modal -->
+<div class="modal fade" id="connectionInfoModal" tabindex="-1" aria-labelledby="connectionInfoModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="scanModalLabel">Diagnostic Scan in Progress</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div class="spinner-border text-primary mb-4" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="lead" id="scan-status-message">Connecting to vehicle...</p>
-                <div class="progress mt-3">
-                    <div id="scan-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 10%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Scan results modal -->
-<div class="modal fade" id="resultsModal" tabindex="-1" aria-labelledby="resultsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="resultsModalLabel">Diagnostic Scan Results</h5>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="connectionInfoModalLabel">Connection Information</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="scan-success-content">
-                    <div class="alert" id="dtc-summary"></div>
-                    
-                    <p class="lead">Would you like to view the detailed results and AI analysis?</p>
-                </div>
-                <div id="scan-error-content" class="d-none">
-                    <div class="alert alert-danger">
-                        <h4><i class="fas fa-exclamation-triangle me-2"></i> Error</h4>
-                        <p id="scan-error-message">Unable to complete the diagnostic scan.</p>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Vehicle:</th>
+                                <td>{{ vehicle_info.year }} {{ vehicle_info.make }} {{ vehicle_info.model }}</td>
+                            </tr>
+                            <tr>
+                                <th>VIN:</th>
+                                <td>{{ vehicle_info.vin or 'Not available' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Protocol:</th>
+                                <td>{{ vehicle_info.protocol or 'Auto' }}</td>
+                            </tr>
+                            <tr>
+                                <th>ECU Name:</th>
+                                <td>{{ vehicle_info.ecu_name or 'Unknown' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Connection Type:</th>
+                                <td>USB</td>
+                            </tr>
+                            <tr>
+                                <th>Connected Since:</th>
+                                <td>{{ session.started_at.strftime('%Y-%m-%d %H:%M:%S') if session and session.started_at else 'Unknown' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a id="view-results-btn" href="#" class="btn btn-primary">View Detailed Results</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clear DTCs Confirmation Modal -->
+<div class="modal fade" id="clearDtcModal" tabindex="-1" aria-labelledby="clearDtcModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="clearDtcModalLabel">Clear Trouble Codes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 48px;"></i>
+                </div>
+                <p class="lead text-center">Are you sure you want to clear all diagnostic trouble codes?</p>
+                <div class="alert alert-warning">
+                    <p><strong>Warning:</strong></p>
+                    <ul>
+                        <li>This will reset the check engine light</li>
+                        <li>If the issue persists, the code may return</li>
+                        <li>Clearing codes will not fix mechanical problems</li>
+                        <li>Some vehicles may require additional steps after clearing codes</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirm-clear-dtc">Confirm Clear</button>
             </div>
         </div>
     </div>
@@ -188,299 +690,292 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize tooltips
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.forEach(function(tooltipTriggerEl) {
-            new bootstrap.Tooltip(tooltipTriggerEl);
+        // Elements
+        const refreshDataBtn = document.getElementById('refresh-data');
+        const refreshDtcBtn = document.getElementById('refresh-dtc');
+        const clearDtcBtn = document.getElementById('clear-dtc');
+        const confirmClearDtcBtn = document.getElementById('confirm-clear-dtc');
+        const refreshSensorsIcon = document.getElementById('refresh-sensors');
+        
+        // Initialize gauges
+        const rpmGauge = initGauge('rpmGauge', 0, 8000, 'RPM');
+        const speedGauge = initGauge('speedGauge', 0, 220, 'km/h');
+        const loadGauge = initGauge('loadGauge', 0, 100, '%');
+        const tempGauge = initGauge('tempGauge', -40, 140, '°C');
+        
+        // Initialize chart
+        const ctx = document.getElementById('realtimeChart').getContext('2d');
+        const realtimeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [{
+                    label: 'RPM',
+                    data: Array(20).fill(0),
+                    borderColor: '#dc3545',
+                    tension: 0.3,
+                    fill: false
+                }, {
+                    label: 'Speed',
+                    data: Array(20).fill(0),
+                    borderColor: '#ffc107',
+                    tension: 0.3,
+                    fill: false
+                }, {
+                    label: 'Load',
+                    data: Array(20).fill(0),
+                    borderColor: '#28a745',
+                    tension: 0.3,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                animation: {
+                    duration: 300
+                }
+            }
         });
         
-        // References to UI elements
-        const scanBtn = document.getElementById('scan-btn');
-        const liveDataBtn = document.getElementById('live-data-btn');
-        const clearCodesBtn = document.getElementById('clear-codes-btn');
-        const disconnectBtn = document.getElementById('disconnect-btn');
-        const connectionStatus = document.getElementById('connection-status');
-        const updateStatus = document.getElementById('update-status');
-        const sensorDataContainer = document.getElementById('sensor-data-container');
-        const noDataMessage = document.getElementById('no-data-message');
-        const sensorDataLoading = document.getElementById('sensor-data-loading');
+        // Clear DTCs button
+        clearDtcBtn.addEventListener('click', function() {
+            const clearDtcModal = new bootstrap.Modal(document.getElementById('clearDtcModal'));
+            clearDtcModal.show();
+        });
         
-        // Modals
-        const scanModal = new bootstrap.Modal(document.getElementById('scanModal'));
-        const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'));
-        
-        // Mock sensor data for demonstration
-        const mockSensors = [
-            { name: 'RPM', pid: '010C', value: 1243, unit: 'rpm', min: 0, max: 8000 },
-            { name: 'Vehicle Speed', pid: '010D', value: 0, unit: 'km/h', min: 0, max: 180 },
-            { name: 'Coolant Temp', pid: '0105', value: 87, unit: '°C', min: -40, max: 150 },
-            { name: 'Engine Load', pid: '0104', value: 21, unit: '%', min: 0, max: 100 },
-            { name: 'Intake Air Temp', pid: '010F', value: 24, unit: '°C', min: -40, max: 100 },
-            { name: 'Throttle Position', pid: '0111', value: 17, unit: '%', min: 0, max: 100 },
-            { name: 'Fuel Level', pid: '012F', value: 52, unit: '%', min: 0, max: 100 },
-            { name: 'Fuel Pressure', pid: '010A', value: 386, unit: 'kPa', min: 0, max: 700 }
-        ];
-        
-        // Handle "Scan for Trouble Codes" button
-        scanBtn.addEventListener('click', function() {
-            // Show scan modal
-            scanModal.show();
-            
-            // Update scan progress (simulated)
-            let progress = 10;
-            const scanStatusMessage = document.getElementById('scan-status-message');
-            const scanProgressBar = document.getElementById('scan-progress-bar');
-            
-            const progressInterval = setInterval(function() {
-                progress += 10;
-                scanProgressBar.style.width = progress + '%';
-                
-                switch(progress) {
-                    case 20:
-                        scanStatusMessage.textContent = 'Initializing diagnostic session...';
-                        break;
-                    case 40:
-                        scanStatusMessage.textContent = 'Reading vehicle information...';
-                        
-                        // Update vehicle info
-                        document.getElementById('vehicle-vin').textContent = '1HGCM82633A123456';
-                        document.getElementById('vehicle-ecu').textContent = 'Generic OBD2 ECU';
-                        document.getElementById('vehicle-protocol').textContent = 'ISO 15765-4 (CAN 11/500)';
-                        break;
-                    case 60:
-                        scanStatusMessage.textContent = 'Scanning for trouble codes...';
-                        break;
-                    case 80:
-                        scanStatusMessage.textContent = 'Reading freeze frame data...';
-                        break;
-                    case 100:
-                        scanStatusMessage.textContent = 'Scan complete!';
-                        clearInterval(progressInterval);
-                        
-                        // Hide scan modal and show results
-                        setTimeout(function() {
-                            scanModal.hide();
-                            showResults();
-                        }, 500);
-                        break;
-                }
-            }, 500);
-            
-            // Enable clear codes button after scan
-            clearCodesBtn.disabled = false;
-            
-            // AJAX request to the server (simulated)
-            /*
-            fetch('/obd2/scan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'port=/dev/ttyUSB0'
+        // Confirm clear DTCs button
+        confirmClearDtcBtn.addEventListener('click', function() {
+            // In a real implementation, this would call an API endpoint to clear DTCs
+            fetch('/api/obd2/clear-dtcs', {
+                method: 'POST'
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showResults(data.session_id, data.dtc_count);
+                    // Hide the modal
+                    bootstrap.Modal.getInstance(document.getElementById('clearDtcModal')).hide();
+                    
+                    // Show success message
+                    alert('Trouble codes cleared successfully! The check engine light should now be off.');
+                    
+                    // Update DTC display
+                    document.getElementById('dtc-container').innerHTML = `
+                        <div id="empty-dtc" class="text-center py-4">
+                            <i class="fas fa-check-circle text-success" style="font-size: 48px;"></i>
+                            <p class="lead mt-3">No trouble codes detected</p>
+                            <p class="text-muted">Your vehicle's diagnostic system is not reporting any errors.</p>
+                        </div>
+                    `;
+                    
+                    // Reset counters
+                    document.getElementById('critical-count').textContent = '0';
+                    document.getElementById('high-count').textContent = '0';
+                    document.getElementById('medium-count').textContent = '0';
+                    document.getElementById('low-count').textContent = '0';
                 } else {
-                    showError(data.error);
+                    alert('Failed to clear trouble codes: ' + data.error);
                 }
             })
             .catch(error => {
-                showError('Network error: ' + error);
-            })
-            .finally(() => {
-                scanModal.hide();
+                console.error('Error clearing DTCs:', error);
+                alert('An error occurred while trying to clear the trouble codes.');
             });
-            */
         });
         
-        // Function to show diagnostic results
-        function showResults(sessionId = 1, dtcCount = 2) {
-            // Prepare results modal
-            const dtcSummary = document.getElementById('dtc-summary');
-            const viewResultsBtn = document.getElementById('view-results-btn');
+        // Refresh data button
+        refreshDataBtn.addEventListener('click', function() {
+            fetchRealTimeData();
+        });
+        
+        // Refresh DTCs button
+        refreshDtcBtn.addEventListener('click', function() {
+            fetchDTCs();
+        });
+        
+        // Refresh sensors icon
+        refreshSensorsIcon.addEventListener('click', function() {
+            refreshSensorsIcon.classList.add('refreshing');
+            fetchSensorData();
             
-            // Hide error content if previously shown
-            document.getElementById('scan-success-content').classList.remove('d-none');
-            document.getElementById('scan-error-content').classList.add('d-none');
+            // Remove the refreshing class after animation completes
+            setTimeout(() => {
+                refreshSensorsIcon.classList.remove('refreshing');
+            }, 1000);
+        });
+        
+        // Fetch real-time data
+        function fetchRealTimeData() {
+            // In a real implementation, this would fetch from an API endpoint
+            // For demonstration, we'll simulate data
             
-            // Set summary class based on DTC count
-            let summaryClass = 'alert-success';
-            let summaryIcon = 'fas fa-check-circle';
-            let summaryText = 'Good news! No issues found.';
+            // Simulate RPM changes
+            const rpm = Math.floor(800 + Math.random() * 3000);
+            document.getElementById('rpmValue').textContent = rpm;
+            rpmGauge.data.datasets[0].data = [rpm];
+            rpmGauge.update();
             
-            if (dtcCount > 0) {
-                summaryClass = dtcCount > 3 ? 'alert-danger' : 'alert-warning';
-                summaryIcon = 'fas fa-exclamation-triangle';
-                summaryText = `Found ${dtcCount} trouble code${dtcCount > 1 ? 's' : ''}. This may indicate a problem with your vehicle.`;
-            }
+            // Simulate speed changes
+            const speed = Math.floor(Math.random() * 120);
+            document.getElementById('speedValue').textContent = speed;
+            speedGauge.data.datasets[0].data = [speed];
+            speedGauge.update();
             
-            dtcSummary.className = `alert ${summaryClass}`;
-            dtcSummary.innerHTML = `<h4><i class="${summaryIcon} me-2"></i> Scan Complete</h4><p>${summaryText}</p>`;
+            // Simulate load changes
+            const load = Math.floor(20 + Math.random() * 60);
+            document.getElementById('loadValue').textContent = load;
+            loadGauge.data.datasets[0].data = [load];
+            loadGauge.update();
             
-            // Set results URL
-            viewResultsBtn.href = `/obd2/results/${sessionId}`;
+            // Simulate temperature changes
+            const temp = Math.floor(75 + Math.random() * 15);
+            document.getElementById('tempValue').textContent = temp;
+            tempGauge.data.datasets[0].data = [temp];
+            tempGauge.update();
             
-            // Show results modal
-            resultsModal.show();
+            // Update chart
+            realtimeChart.data.datasets[0].data.shift();
+            realtimeChart.data.datasets[0].data.push(rpm / 40);  // Scale down for chart visibility
+            
+            realtimeChart.data.datasets[1].data.shift();
+            realtimeChart.data.datasets[1].data.push(speed);
+            
+            realtimeChart.data.datasets[2].data.shift();
+            realtimeChart.data.datasets[2].data.push(load);
+            
+            realtimeChart.update();
+            
+            // Also fetch sensor data
+            fetchSensorData();
         }
         
-        // Function to show error message
-        function showError(message) {
-            // Hide success content
-            document.getElementById('scan-success-content').classList.add('d-none');
-            document.getElementById('scan-error-content').classList.remove('d-none');
+        // Fetch sensor data
+        function fetchSensorData() {
+            // In a real implementation, this would fetch from an API endpoint
+            // For demonstration, we'll update the existing sample data with random fluctuations
             
-            // Set error message
-            document.getElementById('scan-error-message').textContent = message;
+            // Get all sensor cards
+            const sensorCards = document.querySelectorAll('.sensor-card');
             
-            // Show results modal with error
-            resultsModal.show();
+            sensorCards.forEach(card => {
+                const valueEl = card.querySelector('.sensor-card-value');
+                const currentValue = parseFloat(valueEl.textContent);
+                
+                // Add a small random fluctuation (±10%)
+                const fluctuation = currentValue * 0.1;
+                const newValue = (currentValue + (Math.random() * fluctuation * 2 - fluctuation)).toFixed(1);
+                
+                // Update only the numeric part, keeping the unit
+                valueEl.childNodes[0].nodeValue = newValue;
+            });
         }
         
-        // Handle "View Live Data" button
-        liveDataBtn.addEventListener('click', function() {
-            // Toggle button text
-            if (liveDataBtn.classList.contains('active')) {
-                stopLiveData();
+        // Fetch DTCs
+        function fetchDTCs() {
+            // In a real implementation, this would fetch from an API endpoint
+            // For demonstration, we'll leave the example data as is
+            console.log('Fetching DTCs...');
+        }
+        
+        // Initialize gauge
+        function initGauge(canvasId, min, max, unit) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Determine colors based on the gauge type
+            let colors = {
+                success: '#28a745',
+                warning: '#ffc107',
+                danger: '#dc3545'
+            };
+            
+            // For temperature gauge, use different thresholds
+            let thresholds;
+            if (canvasId === 'tempGauge') {
+                thresholds = [
+                    {value: min, color: colors.danger},     // Too cold
+                    {value: 40, color: colors.warning},     // Warming up
+                    {value: 70, color: colors.success},     // Normal
+                    {value: 105, color: colors.warning},    // Getting hot
+                    {value: 115, color: colors.danger}      // Overheating
+                ];
+            } else if (canvasId === 'rpmGauge') {
+                thresholds = [
+                    {value: min, color: colors.success},
+                    {value: 3000, color: colors.success},
+                    {value: 5000, color: colors.warning},
+                    {value: 6500, color: colors.danger}
+                ];
+            } else if (canvasId === 'loadGauge') {
+                thresholds = [
+                    {value: min, color: colors.success},
+                    {value: 70, color: colors.warning},
+                    {value: 85, color: colors.danger}
+                ];
             } else {
-                startLiveData();
+                // Default (speed)
+                thresholds = [
+                    {value: min, color: colors.success},
+                    {value: 80, color: colors.warning},
+                    {value: 120, color: colors.danger}
+                ];
             }
-        });
-        
-        let liveDataInterval = null;
-        
-        // Function to start live data
-        function startLiveData() {
-            // Update UI
-            liveDataBtn.classList.add('active');
-            liveDataBtn.innerHTML = '<i class="fas fa-stop fa-2x mb-2"></i><br>Stop Live Data';
-            updateStatus.textContent = 'Updating';
-            updateStatus.className = 'badge bg-success';
             
-            // Show loading
-            noDataMessage.classList.add('d-none');
-            sensorDataLoading.classList.remove('d-none');
-            
-            // Simulate loading delay
-            setTimeout(function() {
-                // Hide loading
-                sensorDataLoading.classList.add('d-none');
+            // Create gradient for the gauge
+            const createGradient = (ctx, thresholds, min, max) => {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
                 
-                // Clear and populate sensor container
-                sensorDataContainer.innerHTML = '';
-                sensorDataContainer.classList.remove('d-none');
-                
-                // Add sensor items
-                mockSensors.forEach(sensor => {
-                    const sensorElem = createSensorElement(sensor);
-                    sensorDataContainer.appendChild(sensorElem);
+                thresholds.forEach((threshold, index) => {
+                    const position = (threshold.value - min) / (max - min);
+                    gradient.addColorStop(position, threshold.color);
                 });
                 
-                // Start periodic updates
-                liveDataInterval = setInterval(updateLiveData, 1000);
-            }, 1500);
-        }
-        
-        // Function to stop live data
-        function stopLiveData() {
-            // Clear interval
-            if (liveDataInterval !== null) {
-                clearInterval(liveDataInterval);
-                liveDataInterval = null;
-            }
+                return gradient;
+            };
             
-            // Update UI
-            liveDataBtn.classList.remove('active');
-            liveDataBtn.innerHTML = '<i class="fas fa-chart-line fa-2x mb-2"></i><br>View Live Data';
-            updateStatus.textContent = 'Stopped';
-            updateStatus.className = 'badge bg-secondary';
+            const gradient = createGradient(ctx, thresholds, min, max);
             
-            // Hide sensor data
-            sensorDataContainer.classList.add('d-none');
-            noDataMessage.classList.remove('d-none');
-        }
-        
-        // Function to create sensor element
-        function createSensorElement(sensor) {
-            const col = document.createElement('div');
-            col.className = 'col-md-3 mb-3 sensor-item';
-            col.dataset.pid = sensor.pid;
-            
-            col.innerHTML = `
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h5 class="sensor-name">${sensor.name}</h5>
-                        <div class="sensor-value display-5">${sensor.value}</div>
-                        <div class="sensor-unit text-muted">${sensor.unit}</div>
-                    </div>
-                </div>
-            `;
-            
-            return col;
-        }
-        
-        // Function to update live data (simulated)
-        function updateLiveData() {
-            const sensorItems = document.querySelectorAll('.sensor-item');
-            
-            sensorItems.forEach(item => {
-                const pid = item.dataset.pid;
-                const valueElement = item.querySelector('.sensor-value');
-                
-                // Find the mock sensor
-                const sensor = mockSensors.find(s => s.pid === pid);
-                if (sensor) {
-                    // Calculate new random value within range
-                    if (sensor.name === 'RPM') {
-                        // More realistic RPM fluctuation
-                        const currentValue = parseInt(valueElement.textContent);
-                        const change = Math.floor(Math.random() * 100) - 50;
-                        sensor.value = Math.max(sensor.min, Math.min(sensor.max, currentValue + change));
-                    } else {
-                        // Small random changes for other sensors
-                        const range = sensor.max - sensor.min;
-                        const change = Math.random() * 0.1 * range - 0.05 * range;
-                        sensor.value = Math.max(sensor.min, Math.min(sensor.max, sensor.value + change));
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [0, max],
+                        backgroundColor: [gradient, '#2c3542'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    circumference: 180,
+                    rotation: 270,
+                    cutout: '70%',
+                    animation: {
+                        duration: 500
+                    },
+                    plugins: {
+                        tooltip: {
+                            enabled: false
+                        },
+                        legend: {
+                            display: false
+                        }
                     }
-                    
-                    // Format value
-                    let displayValue = sensor.value;
-                    if (sensor.unit === '%' || sensor.unit === '°C' || sensor.unit === 'km/h') {
-                        displayValue = Math.round(sensor.value);
-                    } else {
-                        displayValue = Math.round(sensor.value * 10) / 10;
-                    }
-                    
-                    // Update display
-                    valueElement.textContent = displayValue;
                 }
             });
         }
         
-        // Handle "Clear Trouble Codes" button
-        clearCodesBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to clear all diagnostic trouble codes and freeze frame data?')) {
-                alert('Trouble codes cleared successfully.');
-                clearCodesBtn.disabled = true;
-            }
-        });
+        // Start periodic data updates
+        setInterval(fetchRealTimeData, 2000);
         
-        // Handle "Disconnect" button
-        disconnectBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to disconnect from the vehicle?')) {
-                // Stop live data if running
-                if (liveDataInterval !== null) {
-                    stopLiveData();
-                }
-                
-                // Redirect to connect page
-                window.location.href = '{{ url_for("obd2_connect") }}';
-            }
-        });
+        // Initial data fetch
+        fetchRealTimeData();
+        fetchDTCs();
     });
 </script>
 {% endblock %}
