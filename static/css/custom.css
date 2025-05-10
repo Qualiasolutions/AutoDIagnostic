@@ -1,0 +1,217 @@
+/**
+ * Custom CSS for Automotive Diagnostic AI Assistant
+ * Uses Bootstrap dark theme
+ */
+
+/* Diagnostic severity indicators */
+.severity-indicator {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.severity-low {
+    background-color: var(--bs-success);
+}
+
+.severity-medium {
+    background-color: var(--bs-warning);
+}
+
+.severity-high {
+    background-color: var(--bs-danger);
+}
+
+.severity-critical {
+    background-color: var(--bs-danger);
+    box-shadow: 0 0 8px var(--bs-danger);
+    animation: pulse 2s infinite;
+}
+
+.severity-unknown {
+    background-color: var(--bs-secondary);
+}
+
+/* Camera viewport styling */
+#video-container {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    border: 2px solid var(--bs-primary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#video {
+    width: 100%;
+    display: none;
+    background-color: var(--bs-dark);
+}
+
+#canvas {
+    display: none;
+}
+
+#image-preview {
+    max-width: 100%;
+    height: auto;
+    display: none;
+    border-radius: 8px;
+}
+
+/* Voice recording styling */
+.recording-indicator {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--bs-danger);
+    margin-right: 10px;
+    animation: pulse 1s infinite;
+}
+
+/* Repair difficulty indicators */
+.difficulty-indicator {
+    display: inline-flex;
+    margin-bottom: 10px;
+}
+
+.difficulty-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 4px;
+    background-color: var(--bs-gray);
+}
+
+.difficulty-dot.active {
+    background-color: var(--bs-primary);
+}
+
+/* Vehicle info card */
+.vehicle-info-card {
+    border-left: 4px solid var(--bs-primary);
+}
+
+/* Results highlight */
+.diagnosis-card {
+    border: none;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.diagnosis-card:hover {
+    transform: translateY(-5px);
+}
+
+.diagnosis-low {
+    border-left: 5px solid var(--bs-success);
+}
+
+.diagnosis-medium {
+    border-left: 5px solid var(--bs-warning);
+}
+
+.diagnosis-high, .diagnosis-critical {
+    border-left: 5px solid var(--bs-danger);
+}
+
+.diagnosis-unknown {
+    border-left: 5px solid var(--bs-secondary);
+}
+
+/* Safety warnings */
+.safety-warning {
+    border-left: 5px solid var(--bs-danger);
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: rgba(var(--bs-danger-rgb), 0.1);
+}
+
+.safety-icon {
+    color: var(--bs-danger);
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+
+/* Animation for critical indicators */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Repair steps */
+.repair-steps {
+    padding-left: 20px;
+}
+
+.repair-steps li {
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.repair-steps li::before {
+    content: "→";
+    position: absolute;
+    left: -20px;
+    color: var(--bs-primary);
+}
+
+/* Make sure images don't overflow */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Loading overlay for analysis */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    color: white;
+}
+
+.loading-spinner {
+    width: 5rem;
+    height: 5rem;
+    margin-bottom: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+}

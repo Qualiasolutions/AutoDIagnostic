@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+
+{% block title %}Vehicle Diagnostic{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h1 class="mb-0"><i class="fas fa-stethoscope"></i> Vehicle Diagnostic</h1>
+            </div>
+            <div class="card-body">
+                <!-- Vehicle Info Card -->
+                <div class="card vehicle-info-card mb-4">
+                    <div class="card-body">
+                        <h4><i class="fas fa-car me-2"></i> Your Vehicle</h4>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Make:</strong> {{ vehicle_info.make }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Model:</strong> {{ vehicle_info.model }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Year:</strong> {{ vehicle_info.year }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Mileage:</strong> {{ vehicle_info.mileage if vehicle_info.mileage else 'Not provided' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Diagnostic Instructions -->
+                <div class="alert alert-info mb-4">
+                    <h4><i class="fas fa-info-circle me-2"></i> Instructions</h4>
+                    <p>Please provide information about your vehicle problem using one or both of the following methods:</p>
+                    <ol>
+                        <li><strong>Camera Analysis:</strong> Take a picture of warning lights, visible damage, or fluid leaks.</li>
+                        <li><strong>Voice Description:</strong> Describe the symptoms, sounds, or behaviors you've noticed.</li>
+                    </ol>
+                    <p>The more information you provide, the more accurate the diagnosis will be.</p>
+                </div>
+                
+                <!-- Input Method Tabs -->
+                <div class="d-flex justify-content-center mb-4">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary active" data-toggle-input="camera">
+                            <i class="fas fa-camera me-2"></i> Camera
+                        </button>
+                        <button type="button" class="btn btn-primary" data-toggle-input="voice">
+                            <i class="fas fa-microphone me-2"></i> Voice
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Camera Input Section -->
+                <div id="camera-section" class="input-section">
+                    <h3 class="mb-3 text-center">Camera Analysis</h3>
+                    
+                    <!-- Camera status alert -->
+                    <div id="camera-status" class="alert alert-info mb-3">
+                        Click "Start Camera" to begin.
+                    </div>
+                    
+                    <!-- Camera guidance -->
+                    <div id="camera-guidance" class="alert alert-secondary mb-3" style="display: none;">
+                        <h5><i class="fas fa-lightbulb me-2"></i> Tips for good photos:</h5>
+                        <ul>
+                            <li>Ensure good lighting</li>
+                            <li>Focus on the problem area</li>
+                            <li>Hold the camera steady</li>
+                            <li>For dashboard lights, turn the ignition to the "on" position</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Camera viewport -->
+                    <div id="video-container" class="mb-3">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas"></canvas>
+                        <img id="image-preview" alt="Captured image">
+                    </div>
+                    
+                    <!-- Camera controls -->
+                    <div class="d-flex justify-content-center mb-4">
+                        <button id="start-camera" class="btn btn-primary me-2">
+                            <i class="fas fa-camera me-2"></i> Start Camera
+                        </button>
+                        <button id="stop-camera" class="btn btn-secondary me-2" style="display: none;">
+                            <i class="fas fa-stop me-2"></i> Stop Camera
+                        </button>
+                        <button id="capture-btn" class="btn btn-success me-2" disabled>
+                            <i class="fas fa-camera-retro me-2"></i> Take Photo
+                        </button>
+                        <button id="upload-btn" class="btn btn-info" disabled>
+                            <i class="fas fa-upload me-2"></i> Analyze Image
+                        </button>
+                    </div>
+                    
+                    <!-- Image Results -->
+                    <div id="results-container" class="mt-4" style="display: none;">
+                        <h4 class="mb-3">Analysis Results:</h4>
+                        <div id="image-results" class="mb-4">
+                            <!-- Results will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Voice Input Section -->
+                <div id="voice-section" class="input-section" style="display: none;">
+                    <h3 class="mb-3 text-center">Voice Description</h3>
+                    
+                    <!-- Recording status alert -->
+                    <div id="recording-status" class="alert alert-info mb-3">
+                        Click "Start Recording" to describe your vehicle's symptoms.
+                    </div>
+                    
+                    <!-- Recording guidance -->
+                    <div id="recording-guidance" class="alert alert-secondary mb-3" style="display: none;">
+                        <h5><i class="fas fa-lightbulb me-2"></i> Tips for good descriptions:</h5>
+                        <ul>
+                            <li>Speak clearly and at a normal pace</li>
+                            <li>Describe when symptoms occur (e.g., "only when braking")</li>
+                            <li>Include any sounds, smells, or feelings you've noticed</li>
+                            <li>Mention when the problem started</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Recording interface -->
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <span id="recording-time" class="badge bg-danger p-2 fs-5">00:00</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-center mb-4">
+                            <button id="start-record" class="btn btn-primary me-2">
+                                <i class="fas fa-microphone me-2"></i> Start Recording
+                            </button>
+                            <button id="stop-record" class="btn btn-danger me-2" style="display: none;">
+                                <i class="fas fa-stop me-2"></i> Stop Recording
+                            </button>
+                            <button id="submit-audio" class="btn btn-info" disabled>
+                                <i class="fas fa-paper-plane me-2"></i> Submit Description
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Voice Results -->
+                    <div id="results-container" class="mt-4" style="display: none;">
+                        <h4 class="mb-3">Analysis Results:</h4>
+                        <div id="voice-results" class="mb-4">
+                            <!-- Results will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Continue to Results Button -->
+                <form id="analysis-form" action="/analyze" method="post">
+                    <div class="text-center mt-4">
+                        <button id="continue-btn" type="submit" class="btn btn-success btn-lg px-5" style="display: none;">
+                            <i class="fas fa-diagnoses me-2"></i> Complete Diagnosis
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Camera JavaScript -->
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+
+<!-- Voice JavaScript -->
+<script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+
+{% block title %}Automotive Diagnostic Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h1 class="mb-0"><i class="fas fa-car"></i> Automotive Diagnostic Assistant</h1>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <h2>Diagnose Your Vehicle Issues</h2>
+                    <p class="lead">
+                        Get real-time diagnosis and repair guidance for your vehicle problems using your
+                        smartphone's camera and microphone.
+                    </p>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-4 text-center">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-car-alt fa-3x text-primary mb-3"></i>
+                                <h4>Vehicle Information</h4>
+                                <p>Input your vehicle details for accurate diagnosis</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-camera fa-3x text-primary mb-3"></i>
+                                <h4>Visual Analysis</h4>
+                                <p>Point your camera at the issue for visual identification</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <i class="fas fa-microphone fa-3x text-primary mb-3"></i>
+                                <h4>Symptom Description</h4>
+                                <p>Describe the symptoms you're experiencing</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="vehicle-form" action="/vehicle-info" method="post" class="needs-validation" novalidate>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3>Vehicle Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="make" class="form-label">Make <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="make" name="make" required placeholder="e.g., Toyota, Ford, Honda">
+                                    <div class="invalid-feedback">
+                                        Please enter your vehicle's make.
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="model" class="form-label">Model <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="model" name="model" required placeholder="e.g., Camry, F-150, Civic">
+                                    <div class="invalid-feedback">
+                                        Please enter your vehicle's model.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="year" class="form-label">Year <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="year" name="year" required min="1900" max="2099" placeholder="e.g., 2015">
+                                    <div class="invalid-feedback">
+                                        Please enter a valid year (1900-2099).
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="mileage" class="form-label">Mileage</label>
+                                    <input type="number" class="form-control" id="mileage" name="mileage" min="0" placeholder="e.g., 75000">
+                                    <div class="invalid-feedback">
+                                        Please enter a valid mileage.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-wrench me-2"></i> Start Diagnosis
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="card mt-5">
+                    <div class="card-header">
+                        <h3>How It Works</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
+                                    <h3 class="mb-0">1</h3>
+                                </div>
+                                <h5 class="mt-2">Enter Vehicle Details</h5>
+                                <p>Provide your vehicle's make, model, and year</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
+                                    <h3 class="mb-0">2</h3>
+                                </div>
+                                <h5 class="mt-2">Show the Problem</h5>
+                                <p>Use your camera to capture the issue</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
+                                    <h3 class="mb-0">3</h3>
+                                </div>
+                                <h5 class="mt-2">Describe Symptoms</h5>
+                                <p>Explain what you're experiencing</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
+                                    <h3 class="mb-0">4</h3>
+                                </div>
+                                <h5 class="mt-2">Get Solutions</h5>
+                                <p>Receive diagnosis and repair options</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle me-2"></i> This application uses your smartphone's camera and microphone to help diagnose vehicle problems. Your privacy is important - no recordings are saved or shared with third parties.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

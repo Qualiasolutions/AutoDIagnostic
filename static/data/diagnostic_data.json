@@ -1,0 +1,303 @@
+{
+  "issues": [
+    {
+      "id": "check_engine_light",
+      "name": "Check Engine Light",
+      "description": "The check engine light is illuminated, indicating a problem detected by the vehicle's computer system.",
+      "severity": "medium",
+      "indicators": ["warning_light", "dashboard_indicator"],
+      "symptoms": [
+        {
+          "name": "engine_light_on",
+          "keywords": ["check engine light", "engine light", "dashboard light", "warning light"]
+        },
+        {
+          "name": "reduced_performance",
+          "keywords": ["less power", "sluggish", "slow acceleration", "poor performance"]
+        }
+      ],
+      "repair_options": [
+        {
+          "name": "Diagnostic Scan",
+          "description": "Use an OBD-II scanner to read the error codes from the vehicle's computer.",
+          "diy_difficulty": 1,
+          "estimated_cost": "$0-50",
+          "steps": [
+            "Purchase or borrow an OBD-II scanner.",
+            "Locate the OBD-II port (usually under the dashboard near the steering column).",
+            "Connect the scanner and turn on the ignition.",
+            "Follow the scanner's instructions to read the error codes.",
+            "Look up the codes online or consult your vehicle's manual for their meaning."
+          ]
+        },
+        {
+          "name": "Professional Diagnosis",
+          "description": "Take your vehicle to a professional mechanic for diagnosis and repair.",
+          "diy_difficulty": 5,
+          "estimated_cost": "$50-150"
+        }
+      ],
+      "safety_warnings": [
+        "If the check engine light is flashing, reduce speed and seek immediate professional help."
+      ]
+    },
+    {
+      "id": "fluid_leak",
+      "name": "Fluid Leak",
+      "description": "Your vehicle appears to be leaking fluid, which could be oil, coolant, transmission fluid, brake fluid, or power steering fluid.",
+      "severity": "high",
+      "indicators": ["fluid_leak", "puddle", "dripping"],
+      "symptoms": [
+        {
+          "name": "visible_leak",
+          "keywords": ["leak", "puddle", "dripping", "fluid under car", "oil spot"]
+        },
+        {
+          "name": "burning_smell",
+          "keywords": ["burning smell", "burning oil", "strange odor"]
+        },
+        {
+          "name": "low_fluid_level",
+          "keywords": ["low oil", "low coolant", "low fluid", "needs refill"]
+        }
+      ],
+      "repair_options": [
+        {
+          "name": "Identify Fluid Type",
+          "description": "Determine what type of fluid is leaking by its color and consistency.",
+          "diy_difficulty": 1,
+          "estimated_cost": "$0",
+          "steps": [
+            "Place a clean piece of cardboard under the leak overnight.",
+            "Check the color: red/pink (transmission/power steering), green/yellow (coolant), brown/black (oil), clear/brown (brake fluid).",
+            "Note the location of the leak (front, middle, or rear of vehicle)."
+          ]
+        },
+        {
+          "name": "Check and Refill Fluid",
+          "description": "Check the fluid level and refill as necessary.",
+          "diy_difficulty": 2,
+          "estimated_cost": "$10-50",
+          "steps": [
+            "Identify which fluid is low by checking all fluid reservoirs.",
+            "Purchase the correct type of fluid for your vehicle.",
+            "Refill the fluid to the proper level according to your owner's manual."
+          ]
+        },
+        {
+          "name": "Professional Leak Repair",
+          "description": "Have a mechanic identify and fix the source of the leak.",
+          "diy_difficulty": 5,
+          "estimated_cost": "$50-500+"
+        }
+      ],
+      "safety_warnings": [
+        "Do not drive with low brake fluid; this is a serious safety hazard.",
+        "Do not drive with low oil pressure; this can cause catastrophic engine damage.",
+        "Do not drive an overheating vehicle (low coolant); this can cause severe engine damage."
+      ]
+    },
+    {
+      "id": "brake_issue",
+      "name": "Brake Problem",
+      "description": "There may be an issue with your vehicle's braking system, which requires prompt attention for safety.",
+      "severity": "critical",
+      "indicators": ["warning_light", "brake_wear"],
+      "symptoms": [
+        {
+          "name": "squealing_brakes",
+          "keywords": ["squealing", "screeching", "squeaking brakes", "brake noise"]
+        },
+        {
+          "name": "grinding_brakes",
+          "keywords": ["grinding", "metal on metal", "harsh noise when braking"]
+        },
+        {
+          "name": "spongy_brakes",
+          "keywords": ["spongy", "soft brakes", "brake pedal goes to floor", "reduced braking"]
+        },
+        {
+          "name": "brake_warning_light",
+          "keywords": ["brake light", "brake warning", "red brake indicator"]
+        }
+      ],
+      "repair_options": [
+        {
+          "name": "Brake Pad Inspection",
+          "description": "Check the condition of your brake pads.",
+          "diy_difficulty": 2,
+          "estimated_cost": "$0",
+          "steps": [
+            "Look through the wheel spokes at the brake rotor and caliper.",
+            "The brake pad should be visible against the rotor.",
+            "If the pad material is less than 1/4 inch thick, they need replacement."
+          ]
+        },
+        {
+          "name": "Brake Pad Replacement",
+          "description": "Replace worn brake pads before they damage the rotors.",
+          "diy_difficulty": 4,
+          "estimated_cost": "$100-300",
+          "steps": [
+            "Purchase the correct brake pads for your vehicle.",
+            "Safely jack up your vehicle and remove the wheel.",
+            "Remove the caliper bolts and pivot the caliper away from the rotor.",
+            "Remove the old pads and replace with new ones.",
+            "Reinstall the caliper and wheel, then repeat for other wheels as needed."
+          ]
+        },
+        {
+          "name": "Professional Brake Service",
+          "description": "Have a professional mechanic inspect and repair your brake system.",
+          "diy_difficulty": 5,
+          "estimated_cost": "$150-800+"
+        }
+      ],
+      "safety_warnings": [
+        "Brake issues are serious safety concerns and should be addressed immediately.",
+        "Do not drive with grinding brakes as this can lead to brake failure.",
+        "If your brake warning light is on, check your brake fluid level immediately."
+      ]
+    },
+    {
+      "id": "battery_issue",
+      "name": "Battery Problem",
+      "description": "Your vehicle's battery or electrical system may be experiencing issues.",
+      "severity": "medium",
+      "indicators": ["warning_light", "corrosion"],
+      "symptoms": [
+        {
+          "name": "hard_starting",
+          "keywords": ["hard to start", "slow cranking", "takes time to start", "won't turn over"]
+        },
+        {
+          "name": "battery_warning_light",
+          "keywords": ["battery light", "charging system", "alternator light"]
+        },
+        {
+          "name": "electrical_issues",
+          "keywords": ["dim lights", "radio reset", "power windows slow", "electronics failing"]
+        }
+      ],
+      "repair_options": [
+        {
+          "name": "Battery Inspection",
+          "description": "Check the battery terminals for corrosion and the battery charge level.",
+          "diy_difficulty": 1,
+          "estimated_cost": "$0-20",
+          "steps": [
+            "Inspect battery terminals for white or greenish corrosion.",
+            "Clean terminals with a wire brush and baking soda solution if corroded.",
+            "Check battery age (usually printed on top).",
+            "If available, use a multimeter to check battery voltage (should be 12.6V when engine off)."
+          ]
+        },
+        {
+          "name": "Battery Jump Start",
+          "description": "Jump start your vehicle if the battery is discharged.",
+          "diy_difficulty": 2,
+          "estimated_cost": "$0",
+          "steps": [
+            "Position another vehicle close to yours, but not touching.",
+            "Turn off both vehicles.",
+            "Connect the red jumper cable to the positive terminal of your dead battery.",
+            "Connect the other end of the red cable to the positive terminal of the good battery.",
+            "Connect the black jumper cable to the negative terminal of the good battery.",
+            "Connect the other end of the black cable to a metal ground on your vehicle (not the negative battery terminal).",
+            "Start the working vehicle and let it run for a few minutes.",
+            "Try to start your vehicle. If successful, keep it running for at least 20 minutes."
+          ]
+        },
+        {
+          "name": "Battery Replacement",
+          "description": "Replace an old or failing battery.",
+          "diy_difficulty": 3,
+          "estimated_cost": "$100-200",
+          "steps": [
+            "Purchase the correct battery for your vehicle.",
+            "Turn off the engine and all electrical components.",
+            "Disconnect the negative terminal first, then the positive.",
+            "Remove any battery hold-down clamps and carefully remove the old battery.",
+            "Install the new battery and secure it with hold-down clamps.",
+            "Connect the positive terminal first, then the negative."
+          ]
+        },
+        {
+          "name": "Professional Electrical System Diagnosis",
+          "description": "Have a mechanic check your vehicle's entire electrical system.",
+          "diy_difficulty": 5,
+          "estimated_cost": "$50-200+"
+        }
+      ],
+      "safety_warnings": [
+        "Wear gloves and eye protection when working with batteries.",
+        "Never smoke or create sparks near a battery as they can release explosive gases.",
+        "Be careful not to touch the positive and negative terminals together with tools."
+      ]
+    },
+    {
+      "id": "tire_issue",
+      "name": "Tire Problem",
+      "description": "One or more of your vehicle's tires may have issues with pressure, wear, or damage.",
+      "severity": "high",
+      "indicators": ["tire_wear", "flat_tire"],
+      "symptoms": [
+        {
+          "name": "tire_pressure_light",
+          "keywords": ["tire pressure", "TPMS", "low tire", "tire light"]
+        },
+        {
+          "name": "uneven_wear",
+          "keywords": ["uneven tire wear", "tire wear", "bald spots", "worn tires"]
+        },
+        {
+          "name": "vibration",
+          "keywords": ["vibration", "shaking", "steering wheel shakes", "vehicle vibrates"]
+        },
+        {
+          "name": "tire_noise",
+          "keywords": ["tire noise", "humming", "roaring", "loud on highway"]
+        }
+      ],
+      "repair_options": [
+        {
+          "name": "Tire Pressure Check",
+          "description": "Check and adjust your tire pressure.",
+          "diy_difficulty": 1,
+          "estimated_cost": "$0-5",
+          "steps": [
+            "Purchase a tire pressure gauge if you don't have one.",
+            "Check your vehicle's recommended tire pressure (usually on a sticker inside the driver's door).",
+            "Remove the valve cap from each tire and check the pressure when tires are cold.",
+            "Add air if the pressure is too low or release air if too high.",
+            "Replace the valve caps when finished."
+          ]
+        },
+        {
+          "name": "Tire Rotation",
+          "description": "Rotate your tires to ensure even wear.",
+          "diy_difficulty": 3,
+          "estimated_cost": "$0-80",
+          "steps": [
+            "Safely jack up one corner of the vehicle and support it with a jack stand.",
+            "Remove the wheel and set it aside.",
+            "Repeat for the other wheels.",
+            "Rotate the tires according to the pattern in your owner's manual (typically front to back or cross pattern).",
+            "Reinstall all wheels and torque lug nuts to specification."
+          ]
+        },
+        {
+          "name": "Professional Tire Service",
+          "description": "Have a tire shop inspect, rotate, or replace your tires.",
+          "diy_difficulty": 5,
+          "estimated_cost": "$20-800+"
+        }
+      ],
+      "safety_warnings": [
+        "Driving on severely worn or damaged tires is extremely dangerous.",
+        "Never drive on a tire with a visible bulge or with objects puncturing it.",
+        "Always maintain proper tire pressure for optimal safety and fuel economy."
+      ]
+    }
+  ]
+}
