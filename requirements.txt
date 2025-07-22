@@ -12,7 +12,7 @@ email-validator>=2.2.0
 # OBD2 Hardware Communication
 pyserial>=3.5
 # python-obd==0.7.1
-pybluez>=0.23  # For Bluetooth OBD2 adapters
+# pybluez>=0.23  # For Bluetooth OBD2 adapters
 bleak>=0.22.0  # Modern Bluetooth Low Energy support
 
 # AI Integration
