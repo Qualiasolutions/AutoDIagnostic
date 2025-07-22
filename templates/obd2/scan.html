@@ -297,8 +297,16 @@
     </div>
     
     <div class="scan-panel">
+        <!-- Scan control buttons -->
+        <div class="text-center mb-4" id="scan-controls">
+            <button id="start-scan-btn" class="btn btn-primary btn-lg">
+                <i class="fas fa-play me-2"></i> Start Diagnostic Scan
+            </button>
+            <p class="text-muted mt-2">Click to begin scanning your vehicle for diagnostic trouble codes</p>
+        </div>
+        
         <!-- Main progress indicator -->
-        <div class="progress-container">
+        <div class="progress-container" id="progress-section" style="display: none;">
             <div class="progress-label">
                 <span>Scan Progress</span>
                 <span id="progress-percentage">0%</span>
@@ -375,7 +383,7 @@
                     <a href="#dtc-section" class="btn btn-info me-2">
                         <i class="fas fa-list me-2"></i> View Trouble Codes
                     </a>
-                    <a href="{{ url_for('obd2_results', session_id=session_id) }}" class="btn btn-primary">
+                    <a href="#" id="view-report-btn" class="btn btn-primary">
                         <i class="fas fa-clipboard-check me-2"></i> View Full Diagnostic Report
                     </a>
                 </div>
@@ -412,7 +420,7 @@
         
         <!-- Action buttons -->
         <div class="action-buttons" id="action-buttons" style="display: none;">
-            <a href="{{ url_for('obd2_results', session_id=session_id) }}" class="btn btn-primary btn-lg me-2">
+            <a href="#" id="view-full-report-btn" class="btn btn-primary btn-lg me-2">
                 <i class="fas fa-clipboard-check me-2"></i> View Full Diagnostic Report
             </a>
             <a href="{{ url_for('obd2_dashboard') }}" class="btn btn-secondary btn-lg">
@@ -426,7 +434,14 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Simulation timing variables
+        // Check if we should auto-start scan
+        const autoStart = new URLSearchParams(window.location.search).get('auto_start');
+        
+        // Scan variables
+        let scanSessionId = null;
+        let isRealScan = true; // Try real scan first, fallback to simulation
+        
+        // Simulation timing variables (for fallback)
         const simulationDuration = 8000; // 8 seconds for the full scan
         const updateInterval = 200; // Update progress every 200ms
         
@@ -472,6 +487,88 @@
         
         // Start time
         const startTime = Date.now();
+        
+        // Add event listeners for report buttons
+        document.getElementById('view-report-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (scanSessionId) {
+                window.location.href = `/obd2/results/${scanSessionId}`;
+            }
+        });
+        
+        document.getElementById('view-full-report-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (scanSessionId) {
+                window.location.href = `/obd2/results/${scanSessionId}`;
+            }
+        });
+        
+        // Add event listener for start scan button
+        document.getElementById('start-scan-btn').addEventListener('click', function() {
+            startRealScan();
+        });
+        
+        // Start scan immediately if auto-start is requested
+        if (autoStart === 'true') {
+            startRealScan();
+        }
+        
+        // Function to start real scan
+        async function startRealScan() {
+            try {
+                // First, scan for available ports
+                const portsResponse = await fetch('/api/obd2/scan-ports');
+                const portsData = await portsResponse.json();
+                
+                if (!portsData.success) {
+                    console.warn('Could not scan ports, falling back to simulation');
+                    startSimulatedScan();
+                    return;
+                }
+                
+                // Use first available port or default
+                const selectedPort = portsData.ports && portsData.ports.length > 0 ? portsData.ports[0].port : null;
+                
+                // Start the actual scan
+                const formData = new FormData();
+                if (selectedPort) {
+                    formData.append('port', selectedPort);
+                }
+                
+                const scanResponse = await fetch('/obd2/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const scanData = await scanResponse.json();
+                
+                if (scanData.success) {
+                    scanSessionId = scanData.session_id;
+                    // Start monitoring the real scan progress
+                    monitorRealScan();
+                } else {
+                    console.warn('Real scan failed:', scanData.error);
+                    startSimulatedScan();
+                }
+            } catch (error) {
+                console.warn('Error starting real scan:', error);
+                startSimulatedScan();
+            }
+        }
+        
+        // Function to monitor real scan progress (simplified - in production this would poll status)
+        function monitorRealScan() {
+            // Simulate progress for real scan (in production, you'd poll a status endpoint)
+            startSimulatedScan();
+        }
+        
+        // Function to start simulated scan
+        function startSimulatedScan() {
+            isRealScan = false;
+            
+            // Show progress section
+            document.getElementById('scan-controls').style.display = 'none';
+            document.getElementById('progress-section').style.display = 'block';
         
         // Sample DTCs for simulation
         const sampleDtcs = [

@@ -1,7 +1,7 @@
 """
-Diagnostic Engine Module
-Combines results from OBD2 data, image analysis, and audio analysis to provide
-comprehensive vehicle diagnostics.
+OBD2 Diagnostic Engine Module
+Analyzes OBD2 diagnostic data including DTCs and sensor readings to provide
+comprehensive vehicle diagnostics with AI enhancement.
 """
 
 import logging
@@ -15,12 +15,13 @@ from utils.diagnostic_ai import DiagnosticAI
 logger = logging.getLogger(__name__)
 
 
-def analyze_diagnostic_data(diagnostic_data, vehicle_info):
+def analyze_obd2_data(dtcs, sensor_readings, vehicle_info):
     """
-    Analyze the collected diagnostic data and return results.
+    Analyze OBD2 diagnostic data and return comprehensive results.
     
     Args:
-        diagnostic_data: Dictionary containing image and voice analysis results
+        dtcs: List of Diagnostic Trouble Codes
+        sensor_readings: List of sensor reading objects
         vehicle_info: Dictionary containing vehicle information
         
     Returns:
@@ -30,240 +31,115 @@ def analyze_diagnostic_data(diagnostic_data, vehicle_info):
         # Initialize the results dictionary
         results = {
             "diagnoses": [],
-            "severity": "unknown",
+            "severity": "none",
             "diy_repairs": [],
             "professional_repairs": [],
             "safety_warnings": []
         }
         
-        # Extract data from image analysis
-        image_results = diagnostic_data.get('image_results', {})
-        voice_results = diagnostic_data.get('voice_results', {})
-        obd_results = diagnostic_data.get('obd_results', {})
-        
-        # Combine all detected issues
-        all_issues = []
-        
-        # Add issues from image analysis
-        if image_results:
-            image_issues = image_results.get('potential_issues', [])
-            confirmed_issues = image_results.get('confirmed_issues', [])
-            additional_issues = image_results.get('additional_issues', [])
-            
-            # Add all issues with their source
-            for issue in image_issues:
-                all_issues.append({
-                    "source": "image",
-                    "description": issue,
-                    "confidence": image_results.get('confidence_scores', {}).get(issue.split(' - ')[0].lower().replace(' ', '_') if ' - ' in issue else 'unknown', 0.5)
-                })
-            
-            for issue in confirmed_issues:
-                all_issues.append({
-                    "source": "image_ai",
-                    "description": issue,
-                    "confidence": 0.8  # AI-confirmed issues have higher confidence
-                })
-            
-            for issue in additional_issues:
-                all_issues.append({
-                    "source": "image_ai",
-                    "description": issue,
-                    "confidence": 0.7
-                })
-            
-            # Add recommendations
-            recommendations = image_results.get('recommendations', [])
-            for rec in recommendations:
-                if "repair" in rec.lower() or "replace" in rec.lower() or "service" in rec.lower():
-                    results["diy_repairs"].append({
-                        "issue_name": "Visual Issue",
-                        "repair_name": rec,
-                        "description": rec,
-                        "difficulty": 3  # Default difficulty
-                    })
-        
-        # Add issues from voice analysis
-        if voice_results:
-            voice_issues = voice_results.get('potential_issues', [])
-            confirmed_issues = voice_results.get('confirmed_issues', [])
-            additional_issues = voice_results.get('additional_issues', [])
-            
-            # Add all issues with their source
-            for issue in voice_issues:
-                all_issues.append({
-                    "source": "audio",
-                    "description": issue,
-                    "confidence": voice_results.get('confidence_scores', {}).get(issue.split(' - ')[0].lower().replace(' ', '_') if ' - ' in issue else 'unknown', 0.5)
-                })
-            
-            for issue in confirmed_issues:
-                all_issues.append({
-                    "source": "audio_ai",
-                    "description": issue,
-                    "confidence": 0.8
-                })
-            
-            for issue in additional_issues:
-                all_issues.append({
-                    "source": "audio_ai",
-                    "description": issue,
-                    "confidence": 0.7
-                })
-            
-            # Add recommendations from voice analysis
-            recommendations = voice_results.get('recommendations', [])
-            for rec in recommendations:
-                if "repair" in rec.lower() or "replace" in rec.lower() or "service" in rec.lower():
-                    results["professional_repairs"].append({
-                        "issue_name": "Audio-Detected Issue",
-                        "repair_name": rec,
-                        "description": rec
-                    })
-        
-        # Add issues from OBD analysis
-        if obd_results:
-            dtcs = obd_results.get('dtcs', [])
+        # Convert DTCs to analysis format
+        dtc_list = []
+        if dtcs:
             for dtc in dtcs:
-                all_issues.append({
-                    "source": "obd",
-                    "description": f"{dtc.get('code')} - {dtc.get('description', 'Unknown')}",
-                    "confidence": 0.9  # OBD codes have high confidence
+                dtc_list.append({
+                    'code': dtc.code,
+                    'description': dtc.description,
+                    'type': dtc.type
                 })
+        
+        # Convert sensor readings to analysis format
+        sensor_data = {}
+        if sensor_readings:
+            for reading in sensor_readings:
+                sensor_data[reading.name] = {
+                    'value': reading.value,
+                    'unit': reading.unit,
+                    'pid': reading.pid
+                }
+        
+        # Determine severity based on DTCs
+        severity = determine_severity(dtc_list)
+        results["severity"] = severity
+        
+        # Generate diagnoses from DTCs
+        if dtc_list:
+            for dtc in dtc_list:
+                # Create diagnosis from each DTC
+                diagnosis = {
+                    "name": dtc['code'],
+                    "description": dtc['description'],
+                    "confidence": 0.9,  # DTCs have high confidence
+                    "severity": severity
+                }
+                results["diagnoses"].append(diagnosis)
+        
+        # Analyze sensor data for anomalies
+        sensor_issues = analyze_sensor_anomalies(sensor_data)
+        for issue in sensor_issues:
+            results["diagnoses"].append(issue)
+        
+        # Generate basic repair recommendations
+        if dtc_list:
+            # Add professional repair recommendation
+            results["professional_repairs"].append({
+                "issue_name": "Diagnostic Trouble Codes Detected",
+                "repair_name": "Professional Diagnostic Service",
+                "description": f"Have a qualified technician perform detailed diagnosis for {len(dtc_list)} DTCs detected",
+                "estimated_cost": "$80-$200"
+            })
             
-            sensor_issues = obd_results.get('sensor_issues', [])
-            for issue in sensor_issues:
-                all_issues.append({
-                    "source": "obd",
-                    "description": issue,
-                    "confidence": 0.8
-                })
-            
-            # Add DTC-based repairs
-            dtc_repairs = obd_results.get('repairs', [])
-            for repair in dtc_repairs:
-                if repair.get('diy', False):
-                    results["diy_repairs"].append({
-                        "issue_name": repair.get('issue', 'OBD Detected Issue'),
-                        "repair_name": repair.get('name', 'Repair'),
-                        "description": repair.get('description', ''),
-                        "difficulty": repair.get('difficulty', 3)
-                    })
-                else:
-                    results["professional_repairs"].append({
-                        "issue_name": repair.get('issue', 'OBD Detected Issue'),
-                        "repair_name": repair.get('name', 'Repair'),
-                        "description": repair.get('description', '')
-                    })
-        
-        # Determine overall severity
-        severity_levels = {
-            "critical": 4,
-            "high": 3,
-            "medium": 2,
-            "low": 1,
-            "none": 0,
-            "unknown": -1
-        }
-        
-        # Get severity from different sources
-        image_severity = image_results.get('severity', 'unknown')
-        voice_severity = voice_results.get('severity', 'unknown')
-        obd_severity = obd_results.get('severity', 'unknown')
-        
-        # Convert to numeric values
-        image_severity_val = severity_levels.get(image_severity, -1)
-        voice_severity_val = severity_levels.get(voice_severity, -1)
-        obd_severity_val = severity_levels.get(obd_severity, -1)
-        
-        # Get maximum severity value that is not unknown
-        severity_values = [val for val in [image_severity_val, voice_severity_val, obd_severity_val] if val >= 0]
-        
-        if severity_values:
-            max_severity_val = max(severity_values)
-            # Convert back to string
-            for level, value in severity_levels.items():
-                if value == max_severity_val:
-                    results["severity"] = level
-                    break
-        
-        # Generate diagnoses by consolidating issues
-        if all_issues:
-            # Group similar issues
-            issue_groups = group_similar_issues(all_issues)
-            
-            # Convert each group to a diagnosis result
-            for group in issue_groups:
-                # Calculate average confidence
-                confidence = sum(issue["confidence"] for issue in group) / len(group)
-                
-                # Use the description from the issue with highest confidence
-                max_confidence_issue = max(group, key=lambda x: x["confidence"])
-                description = max_confidence_issue["description"]
-                
-                # Create diagnosis name (simplified version of description)
-                name = simplify_description(description)
-                
-                # Add to results
-                results["diagnoses"].append({
-                    "name": name,
-                    "description": description,
-                    "confidence": confidence,
-                    "severity": results["severity"]  # Use overall severity
-                })
-        
-        # Add safety warnings
-        safety_warnings = []
-        if image_results.get('safety_concerns'):
-            safety_warnings.append(image_results.get('safety_concerns'))
-        if voice_results.get('safety_concerns'):
-            safety_warnings.append(voice_results.get('safety_concerns'))
-        if obd_results.get('safety_concerns'):
-            safety_warnings.append(obd_results.get('safety_concerns'))
-        
-        # If severity is high or critical, add a general safety warning
-        if results["severity"] in ["high", "critical"]:
-            safety_warnings.append(
-                "WARNING: Your vehicle has potentially serious issues. "
-                "It may not be safe to drive. Consider having it towed to a repair facility."
-            )
-        
-        # Add unique safety warnings to results
-        for warning in safety_warnings:
-            if warning and warning not in [w.get('text', '') for w in results["safety_warnings"]]:
-                results["safety_warnings"].append({
-                    "text": warning,
-                    "issue_name": "Safety Concern"
-                })
-        
-        # If no diagnoses were made but there are issues, add a general diagnosis
-        if not results["diagnoses"] and all_issues:
-            results["diagnoses"].append({
-                "name": "Multiple Issues Detected",
-                "description": "Multiple potential issues were detected but couldn't be narrowed down to specific diagnoses.",
-                "confidence": 0.5,
-                "severity": results["severity"]
+            # Add DTC clearing as DIY option
+            results["diy_repairs"].append({
+                "issue_name": "Clear Diagnostic Codes",
+                "repair_name": "Clear DTCs",
+                "description": "Clear diagnostic trouble codes after repairs are completed",
+                "difficulty": 1,
+                "estimated_cost": "$0",
+                "steps": [
+                    "Connect OBD2 scanner to vehicle",
+                    "Turn ignition to ON position (engine off)",
+                    "Select 'Clear DTCs' or 'Erase Codes' option",
+                    "Confirm the clearing operation",
+                    "Turn off ignition and restart engine",
+                    "Verify codes are cleared"
+                ]
             })
         
-        # If there are no issues at all, add a "No issues detected" diagnosis
-        if not all_issues:
+        # Add safety warnings based on severity and specific codes
+        if severity in ["high", "critical"]:
+            results["safety_warnings"].append({
+                "text": "Vehicle has serious diagnostic codes that may affect safety and reliability. Have the vehicle inspected immediately.",
+                "issue_name": "Critical Vehicle Issues"
+            })
+        
+        # Check for specific critical codes
+        critical_codes = ['P0301', 'P0302', 'P0303', 'P0304', 'P0305', 'P0306', 'P0307', 'P0308']
+        misfire_codes = [dtc['code'] for dtc in dtc_list if dtc['code'] in critical_codes]
+        if misfire_codes:
+            results["safety_warnings"].append({
+                "text": "Engine misfire detected. Continued driving may cause catalytic converter damage. Reduce speed and seek immediate repair.",
+                "issue_name": "Engine Misfire"
+            })
+        
+        # If no issues detected, add positive result
+        if not dtc_list and not sensor_issues:
             results["diagnoses"].append({
                 "name": "No Issues Detected",
-                "description": "No issues were detected in the diagnostic analysis.",
-                "confidence": 0.9,
+                "description": "Vehicle's diagnostic system shows no trouble codes or sensor anomalies",
+                "confidence": 0.95,
                 "severity": "none"
             })
             results["severity"] = "none"
         
-        # Use AI to enhance the diagnostic results if needed
-        ai_enhanced_results = enhance_with_ai(results, all_issues, vehicle_info)
+        # Use AI to enhance the diagnostic results
+        ai_enhanced_results = enhance_with_ai(results, dtc_list, sensor_data, vehicle_info)
         if ai_enhanced_results:
             results.update(ai_enhanced_results)
         
         return results
     
     except Exception as e:
-        logger.error(f"Error analyzing diagnostic data: {str(e)}")
+        logger.error(f"Error analyzing OBD2 data: {str(e)}")
         return {
             "diagnoses": [{
                 "name": "Diagnostic Error",
@@ -281,263 +157,269 @@ def analyze_diagnostic_data(diagnostic_data, vehicle_info):
         }
 
 
-def group_similar_issues(issues):
+def determine_severity(dtc_list):
     """
-    Group similar issues together.
+    Determine the overall severity based on DTC codes.
     
     Args:
-        issues: List of issue dictionaries
+        dtc_list: List of DTC dictionaries
         
     Returns:
-        List of groups (each group is a list of similar issues)
+        Severity level string
     """
-    if not issues:
-        return []
+    if not dtc_list:
+        return "none"
     
-    # Initialize groups with the first issue
-    groups = [[issues[0]]]
+    # Critical codes that require immediate attention
+    critical_codes = [
+        'P0301', 'P0302', 'P0303', 'P0304', 'P0305', 'P0306', 'P0307', 'P0308',  # Misfires
+        'P0200', 'P0201', 'P0202', 'P0203', 'P0204', 'P0205', 'P0206', 'P0207',  # Injector circuits
+        'P0340', 'P0341', 'P0342', 'P0343',  # Camshaft position sensor
+        'P0335', 'P0336', 'P0337', 'P0338',  # Crankshaft position sensor
+    ]
     
-    # For each remaining issue
-    for issue in issues[1:]:
-        # Check if it's similar to any existing group
-        added = False
-        for group in groups:
-            # Check if the issue is similar to any issue in this group
-            for existing_issue in group:
-                if are_issues_similar(issue["description"], existing_issue["description"]):
-                    group.append(issue)
-                    added = True
-                    break
-            if added:
-                break
-        
-        # If not similar to any existing group, create a new group
-        if not added:
-            groups.append([issue])
+    # High severity codes
+    high_codes = [
+        'P0100', 'P0101', 'P0102', 'P0103',  # MAF sensor
+        'P0110', 'P0111', 'P0112', 'P0113',  # Intake air temp
+        'P0170', 'P0171', 'P0172', 'P0173', 'P0174', 'P0175',  # Fuel trim
+        'P0300',  # Random misfire
+    ]
     
-    return groups
+    # Check for critical codes
+    for dtc in dtc_list:
+        if dtc['code'] in critical_codes:
+            return "critical"
+    
+    # Check for high severity codes
+    for dtc in dtc_list:
+        if dtc['code'] in high_codes:
+            return "high"
+    
+    # Default to medium for any DTCs present
+    return "medium"
 
 
-def are_issues_similar(desc1, desc2):
+def analyze_sensor_anomalies(sensor_data):
     """
-    Determine if two issue descriptions are similar.
+    Analyze sensor readings for anomalies.
     
     Args:
-        desc1: First issue description
-        desc2: Second issue description
+        sensor_data: Dictionary of sensor readings
         
     Returns:
-        True if similar, False otherwise
+        List of sensor-related diagnoses
     """
-    # Convert to lowercase
-    desc1 = desc1.lower()
-    desc2 = desc2.lower()
+    issues = []
     
-    # Check if either description contains the other
-    if desc1 in desc2 or desc2 in desc1:
-        return True
-    
-    # Split into words and check for common important words
-    words1 = set(desc1.split())
-    words2 = set(desc2.split())
-    
-    # Common noise words to ignore
-    noise_words = {"a", "an", "the", "is", "are", "was", "were", "to", "in", "on", "at", "of", "for", "with"}
-    
-    # Remove noise words
-    words1 = words1 - noise_words
-    words2 = words2 - noise_words
-    
-    # Calculate similarity based on common words
-    if not words1 or not words2:
-        return False
-    
-    # Count common words
-    common_words = words1.intersection(words2)
-    
-    # Calculate Jaccard similarity
-    similarity = len(common_words) / (len(words1) + len(words2) - len(common_words))
-    
-    # Threshold for similarity
-    return similarity > 0.3
-
-
-def simplify_description(description):
-    """
-    Create a simplified name from a description.
-    
-    Args:
-        description: Full issue description
+    try:
+        # Check engine temperature
+        if 'COOLANT_TEMP' in sensor_data:
+            temp = sensor_data['COOLANT_TEMP']['value']
+            if temp > 100:  # Over 100°C
+                issues.append({
+                    "name": "Engine Overheating",
+                    "description": f"Engine coolant temperature is {temp}°C, which is above normal operating range",
+                    "confidence": 0.8,
+                    "severity": "high"
+                })
+            elif temp < 70:  # Under 70°C when warm
+                issues.append({
+                    "name": "Engine Not Reaching Operating Temperature",
+                    "description": f"Engine coolant temperature is {temp}°C, which may indicate thermostat issues",
+                    "confidence": 0.6,
+                    "severity": "medium"
+                })
         
-    Returns:
-        Simplified name
-    """
-    # Remove everything after a dash or colon
-    for separator in [' - ', ': ', ':', '.']:
-        if separator in description:
-            description = description.split(separator)[0]
+        # Check RPM at idle
+        if 'RPM' in sensor_data:
+            rpm = sensor_data['RPM']['value']
+            if rpm > 1200:  # High idle
+                issues.append({
+                    "name": "High Idle RPM",
+                    "description": f"Engine is idling at {rpm} RPM, which is higher than normal (700-900 RPM)",
+                    "confidence": 0.7,
+                    "severity": "medium"
+                })
+            elif rpm < 500 and rpm > 0:  # Very low idle
+                issues.append({
+                    "name": "Low Idle RPM",
+                    "description": f"Engine is idling at {rpm} RPM, which may cause stalling",
+                    "confidence": 0.7,
+                    "severity": "medium"
+                })
+        
+        # Check fuel trims
+        if 'SHORT_FUEL_TRIM_1' in sensor_data:
+            stft = sensor_data['SHORT_FUEL_TRIM_1']['value']
+            if abs(stft) > 10:  # More than 10% fuel trim
+                trim_type = "lean" if stft > 0 else "rich"
+                issues.append({
+                    "name": f"Fuel System Running {trim_type.title()}",
+                    "description": f"Short term fuel trim is {stft}%, indicating the engine is running {trim_type}",
+                    "confidence": 0.8,
+                    "severity": "medium"
+                })
+        
+        # Check oxygen sensor voltage
+        if 'O2_VOLTAGE' in sensor_data or 'OXYGEN_SENSOR_1' in sensor_data:
+            o2_key = 'O2_VOLTAGE' if 'O2_VOLTAGE' in sensor_data else 'OXYGEN_SENSOR_1'
+            o2_voltage = sensor_data[o2_key]['value']
+            if o2_voltage < 0.1 or o2_voltage > 0.9:  # Stuck lean or rich
+                condition = "lean" if o2_voltage < 0.1 else "rich"
+                issues.append({
+                    "name": f"Oxygen Sensor Stuck {condition.title()}",
+                    "description": f"Oxygen sensor voltage is {o2_voltage}V, indicating it may be stuck {condition}",
+                    "confidence": 0.7,
+                    "severity": "medium"
+                })
     
-    # Limit length
-    if len(description) > 50:
-        description = description[:47] + '...'
+    except Exception as e:
+        logger.error(f"Error analyzing sensor anomalies: {str(e)}")
     
-    return description
+    return issues
 
 
-def enhance_with_ai(results, all_issues, vehicle_info):
+def enhance_with_ai(results, dtc_list, sensor_data, vehicle_info):
     """
-    Enhance diagnostic results using AI.
+    Enhance diagnostic results using AI analysis.
     
     Args:
         results: Current diagnostic results
-        all_issues: List of all detected issues
-        vehicle_info: Dictionary with vehicle information
+        dtc_list: List of DTCs
+        sensor_data: Dictionary of sensor readings
+        vehicle_info: Vehicle information
         
     Returns:
         Enhanced results or None if AI is not available
     """
     try:
         # Check if we have AI libraries available
-        ai = DiagnosticAI()
+        ai = DiagnosticAI(use_openai=False, use_anthropic=True)
         
-        if not (ai.use_openai or ai.use_anthropic):
+        if not ai.use_anthropic:
             logger.warning("No AI libraries available for diagnostic enhancement")
             return None
         
-        # Format the current results and issues for the AI
-        issues_str = ""
-        for issue in all_issues:
-            issues_str += f"- {issue['description']} (source: {issue['source']}, confidence: {issue['confidence']})\n"
+        # Format the current results for the AI
+        dtcs_str = ""
+        for dtc in dtc_list:
+            dtcs_str += f"- {dtc['code']}: {dtc['description']} (Type: {dtc['type']})\n"
+        
+        sensor_str = ""
+        for name, data in sensor_data.items():
+            sensor_str += f"- {name}: {data['value']} {data['unit']}\n"
         
         diagnoses_str = ""
         for diagnosis in results["diagnoses"]:
-            diagnoses_str += f"- {diagnosis['name']}: {diagnosis['description']} (confidence: {diagnosis['confidence']})\n"
+            diagnoses_str += f"- {diagnosis['name']}: {diagnosis['description']}\n"
         
-        # Create the prompt for AI
-        prompt = f"""You are an expert automotive diagnostic AI assistant.
+        # Create the prompt for AI enhancement
+        prompt = f"""You are an expert automotive diagnostic technician analyzing OBD2 data.
 Please enhance the following diagnostic results for a vehicle:
 
 Vehicle: {vehicle_info.get('year', 'Unknown')} {vehicle_info.get('make', 'Unknown')} {vehicle_info.get('model', 'Unknown')}
 Mileage: {vehicle_info.get('mileage', 'Unknown')}
 
-Detected Issues:
-{issues_str}
+Diagnostic Trouble Codes:
+{dtcs_str if dtcs_str else "No DTCs detected"}
 
-Current Diagnoses:
+Sensor Readings:
+{sensor_str if sensor_str else "No sensor anomalies detected"}
+
+Current Analysis:
 {diagnoses_str}
 
-Overall Severity: {results['severity']}
+Current Severity: {results['severity']}
 
-Your task is to review the collected data, improve the diagnoses by adding professional insights, and provide better repair recommendations.
+Your task is to provide professional diagnostic insights and improve the repair recommendations.
 
 Please provide:
-1. Refined diagnoses with more accurate descriptions and severity levels
-2. Additional DIY repairs the vehicle owner might attempt (if applicable)
-3. Professional repair recommendations that might be needed
-4. Important safety warnings the vehicle owner should be aware of
+1. Enhanced diagnoses with professional technical analysis
+2. Specific DIY repair procedures where appropriate
+3. Professional repair recommendations with accurate cost estimates
+4. Critical safety warnings if applicable
 
 Format your response as a JSON object with the following structure:
 {{
   "enhanced_diagnoses": [
     {{
       "name": "Diagnosis name",
-      "description": "Detailed description",
+      "description": "Professional technical description",
       "confidence": 0.0-1.0,
       "severity": "critical|high|medium|low|none"
-    }},
-    ...
+    }}
   ],
   "enhanced_severity": "critical|high|medium|low|none",
   "enhanced_diy_repairs": [
     {{
       "issue_name": "Issue being repaired",
-      "repair_name": "Name of repair procedure",
-      "description": "Detailed description",
+      "repair_name": "Specific repair procedure name",
+      "description": "Detailed technical description",
       "difficulty": 1-5,
       "estimated_cost": "$XX-$YY",
-      "steps": ["Step 1", "Step 2", ...]
-    }},
-    ...
+      "steps": ["Specific step 1", "Specific step 2", "..."]
+    }}
   ],
   "enhanced_professional_repairs": [
     {{
-      "issue_name": "Issue being repaired",
-      "repair_name": "Name of repair procedure",
-      "description": "Detailed description",
+      "issue_name": "Issue being repaired", 
+      "repair_name": "Professional repair procedure",
+      "description": "Technical description of repair",
       "estimated_cost": "$XX-$YY"
-    }},
-    ...
+    }}
   ],
   "enhanced_safety_warnings": [
     {{
       "text": "Safety warning text",
-      "issue_name": "Related issue"
-    }},
-    ...
+      "issue_name": "Related issue name"
+    }}
   ]
 }}
 
-Ensure your response is accurate, helpful, and formatted exactly as the JSON structure above.
+Provide only the JSON response with professional automotive expertise.
 """
         
-        # Try with Anthropic first if available
-        if ai.use_anthropic:
-            try:
-                analysis = ai._analyze_with_anthropic(prompt)
-                if analysis:
-                    logger.info("Successfully enhanced diagnostics with Anthropic")
-                    enhanced_results = {}
-                    
-                    # Update results with AI enhancements
-                    if analysis.get('enhanced_diagnoses'):
-                        enhanced_results['diagnoses'] = analysis['enhanced_diagnoses']
-                    
-                    if analysis.get('enhanced_severity'):
-                        enhanced_results['severity'] = analysis['enhanced_severity']
-                    
-                    if analysis.get('enhanced_diy_repairs'):
-                        enhanced_results['diy_repairs'] = analysis['enhanced_diy_repairs']
-                    
-                    if analysis.get('enhanced_professional_repairs'):
-                        enhanced_results['professional_repairs'] = analysis['enhanced_professional_repairs']
-                    
-                    if analysis.get('enhanced_safety_warnings'):
-                        enhanced_results['safety_warnings'] = analysis['enhanced_safety_warnings']
-                    
-                    return enhanced_results
-            except Exception as e:
-                logger.error(f"Error enhancing diagnostics with Anthropic: {e}")
-        
-        # Fall back to OpenAI if available
-        if ai.use_openai:
-            try:
-                analysis = ai._analyze_with_openai(prompt)
-                if analysis:
-                    logger.info("Successfully enhanced diagnostics with OpenAI")
-                    enhanced_results = {}
-                    
-                    # Update results with AI enhancements
-                    if analysis.get('enhanced_diagnoses'):
-                        enhanced_results['diagnoses'] = analysis['enhanced_diagnoses']
-                    
-                    if analysis.get('enhanced_severity'):
-                        enhanced_results['severity'] = analysis['enhanced_severity']
-                    
-                    if analysis.get('enhanced_diy_repairs'):
-                        enhanced_results['diy_repairs'] = analysis['enhanced_diy_repairs']
-                    
-                    if analysis.get('enhanced_professional_repairs'):
-                        enhanced_results['professional_repairs'] = analysis['enhanced_professional_repairs']
-                    
-                    if analysis.get('enhanced_safety_warnings'):
-                        enhanced_results['safety_warnings'] = analysis['enhanced_safety_warnings']
-                    
-                    return enhanced_results
-            except Exception as e:
-                logger.error(f"Error enhancing diagnostics with OpenAI: {e}")
+        # Get AI analysis
+        analysis = ai._analyze_with_anthropic(prompt)
+        if analysis:
+            logger.info("Successfully enhanced OBD2 diagnostics with AI")
+            enhanced_results = {}
+            
+            # Update results with AI enhancements
+            if analysis.get('enhanced_diagnoses'):
+                enhanced_results['diagnoses'] = analysis['enhanced_diagnoses']
+            
+            if analysis.get('enhanced_severity'):
+                enhanced_results['severity'] = analysis['enhanced_severity']
+            
+            if analysis.get('enhanced_diy_repairs'):
+                enhanced_results['diy_repairs'] = analysis['enhanced_diy_repairs']
+            
+            if analysis.get('enhanced_professional_repairs'):
+                enhanced_results['professional_repairs'] = analysis['enhanced_professional_repairs']
+            
+            if analysis.get('enhanced_safety_warnings'):
+                enhanced_results['safety_warnings'] = analysis['enhanced_safety_warnings']
+            
+            return enhanced_results
         
         return None
     
     except Exception as e:
         logger.error(f"Error in AI enhancement: {str(e)}")
         return None
+
+
+# Legacy function for backward compatibility
+def analyze_diagnostic_data(diagnostic_data, vehicle_info):
+    """
+    Legacy function maintained for backward compatibility.
+    Routes to OBD2-specific analysis.
+    """
+    # Extract OBD2 data if present
+    obd_results = diagnostic_data.get('obd_results', {})
+    dtcs = obd_results.get('dtcs', [])
+    sensor_readings = obd_results.get('sensor_readings', [])
+    
+    return analyze_obd2_data(dtcs, sensor_readings, vehicle_info)

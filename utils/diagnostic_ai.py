@@ -27,17 +27,36 @@ class DiagnosticAI:
         """
         self.use_openai = use_openai
         self.use_anthropic = use_anthropic
+        self.openai_client = None
+        self.anthropic_client = None
         
-        # Check if API keys are available
+        # Check if API keys are available and initialize clients
         if use_openai:
             self.openai_key = os.environ.get('OPENAI_API_KEY')
-            if not self.openai_key:
+            if self.openai_key:
+                try:
+                    from openai import OpenAI
+                    self.openai_client = OpenAI(api_key=self.openai_key)
+                    logger.info("OpenAI client initialized successfully")
+                except Exception as e:
+                    logger.error(f"Failed to initialize OpenAI client: {e}")
+                    self.use_openai = False
+            else:
                 logger.warning("OPENAI_API_KEY not set. OpenAI functions will not work.")
                 self.use_openai = False
         
         if use_anthropic:
             self.anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
-            if not self.anthropic_key:
+            if self.anthropic_key:
+                try:
+                    import anthropic
+                    from anthropic import Anthropic
+                    self.anthropic_client = Anthropic(api_key=self.anthropic_key)
+                    logger.info("Anthropic client initialized successfully")
+                except Exception as e:
+                    logger.error(f"Failed to initialize Anthropic client: {e}")
+                    self.use_anthropic = False
+            else:
                 logger.warning("ANTHROPIC_API_KEY not set. Anthropic functions will not work.")
                 self.use_anthropic = False
         
@@ -178,12 +197,12 @@ Provide only the JSON response, with no additional text before or after.
             Analysis results as a dictionary, or None if failed
         """
         try:
-            # Import Anthropic
-            import anthropic
-            from anthropic import Anthropic
+            # Use the pre-initialized client
+            if not self.anthropic_client:
+                logger.error("Anthropic client not initialized")
+                return None
             
-            # Initialize the client
-            client = Anthropic(api_key=self.anthropic_key)
+            client = self.anthropic_client
             
             # Call Claude to analyze the data
             # the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
@@ -232,11 +251,12 @@ Provide only the JSON response, with no additional text before or after.
             Analysis results as a dictionary, or None if failed
         """
         try:
-            # Import OpenAI
-            from openai import OpenAI
+            # Use the pre-initialized client
+            if not self.openai_client:
+                logger.error("OpenAI client not initialized")
+                return None
             
-            # Initialize the client
-            client = OpenAI(api_key=self.openai_key)
+            client = self.openai_client
             
             # Call OpenAI to analyze the data
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024
@@ -610,12 +630,12 @@ Provide only the JSON response, with no additional text before or after.
             Repair guide as a dictionary, or None if failed
         """
         try:
-            # Import Anthropic
-            import anthropic
-            from anthropic import Anthropic
+            # Use the pre-initialized client
+            if not self.anthropic_client:
+                logger.error("Anthropic client not initialized")
+                return None
             
-            # Initialize the client
-            client = Anthropic(api_key=self.anthropic_key)
+            client = self.anthropic_client
             
             # Call Claude to generate the repair guide
             # the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
@@ -664,11 +684,12 @@ Provide only the JSON response, with no additional text before or after.
             Repair guide as a dictionary, or None if failed
         """
         try:
-            # Import OpenAI
-            from openai import OpenAI
+            # Use the pre-initialized client
+            if not self.openai_client:
+                logger.error("OpenAI client not initialized")
+                return None
             
-            # Initialize the client
-            client = OpenAI(api_key=self.openai_key)
+            client = self.openai_client
             
             # Call OpenAI to generate the repair guide
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024

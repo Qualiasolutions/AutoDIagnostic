@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Automotive Diagnostic AI Assistant{% endblock %}
+{% block title %}OBD2 Diagnostic Pro{% endblock %}
 
 {% block head %}
 <style>
@@ -33,15 +33,17 @@
     }
     
     .hero-heading {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: 700;
         margin-bottom: 1.5rem;
+        color: #17a2b8;
     }
     
     .hero-subheading {
-        font-size: 1.25rem;
+        font-size: 1.4rem;
         margin-bottom: 2rem;
         max-width: 80%;
+        color: #e9ecef;
     }
     
     .feature-card {
@@ -50,82 +52,110 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         height: 100%;
         overflow: hidden;
+        border: 1px solid #17a2b8;
     }
     
     .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(23, 162, 184, 0.3);
     }
     
     .feature-icon {
-        font-size: 40px;
-        height: 80px;
-        width: 80px;
+        font-size: 50px;
+        height: 100px;
+        width: 100px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 1rem;
+        margin: 0 auto 1.5rem;
         border-radius: 50%;
-        background-color: rgba(23, 162, 184, 0.1);
-        color: #17a2b8;
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
     }
     
     .feature-title {
-        font-size: 1.25rem;
-        font-weight: 600;
+        font-size: 1.4rem;
+        font-weight: 700;
         margin-bottom: 1rem;
+        color: #17a2b8;
     }
     
     .feature-text {
-        font-size: 0.95rem;
+        font-size: 1rem;
         color: #adb5bd;
+        line-height: 1.6;
     }
     
     .feature-card-body {
-        padding: 1.5rem;
-    }
-    
-    .feature-image-container {
-        height: 160px;
-        overflow: hidden;
-    }
-    
-    .feature-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        padding: 2rem;
     }
     
     .cta-section {
-        padding: 3rem 0;
-        background-color: #232b36;
+        padding: 4rem 0;
+        background: linear-gradient(135deg, #232b36, #2c3542);
         border-radius: 8px;
         text-align: center;
-        margin: 3rem 0;
+        margin: 4rem 0;
+        border: 2px solid #17a2b8;
     }
     
     .cta-heading {
-        margin-bottom: 1.5rem;
-        font-size: 2rem;
+        margin-bottom: 2rem;
+        font-size: 2.5rem;
+        color: #17a2b8;
+        font-weight: 700;
     }
     
     .cta-text {
-        margin-bottom: 2rem;
-        max-width: 700px;
+        margin-bottom: 2.5rem;
+        max-width: 800px;
         margin-left: auto;
         margin-right: auto;
+        font-size: 1.1rem;
+        color: #e9ecef;
     }
     
     .get-started-section {
-        padding: 2rem;
+        padding: 3rem;
         background-color: #232b36;
         border-radius: 8px;
+        border: 1px solid #17a2b8;
     }
     
     .car-form {
         background-color: #2c3542;
-        padding: 1.5rem;
+        padding: 2rem;
         border-radius: 8px;
+        border: 1px solid #495057;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        border: none;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #138496, #117a8b);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(23, 162, 184, 0.3);
+    }
+
+    .btn-outline-secondary {
+        border-color: #6c757d;
+        color: #adb5bd;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
     }
 
     @media (max-width: 768px) {
@@ -137,6 +167,10 @@
         .hero-subheading {
             max-width: 100%;
         }
+
+        .hero-heading {
+            font-size: 2.2rem;
+        }
     }
 </style>
 {% endblock %}
@@ -147,14 +181,14 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-8 hero-content">
-                <h1 class="hero-heading">Smart Vehicle Diagnostics Powered by AI</h1>
-                <p class="hero-subheading">Diagnose your vehicle issues with advanced AI technology. Connect directly to your car's OBD2 port, or use your camera and microphone to capture problems.</p>
-                <div class="d-flex flex-wrap">
-                    <a href="{{ url_for('obd2_index') }}" class="btn btn-primary btn-lg me-2 mb-2">
-                        <i class="fas fa-plug me-2"></i> OBD2 Diagnostics
+                <h1 class="hero-heading">Professional OBD2 Diagnostics</h1>
+                <p class="hero-subheading">Advanced AI-powered OBD2 diagnostic tool for professional automotive technicians and enthusiasts. Connect directly to any vehicle's diagnostic port for comprehensive analysis.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="#get-started" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plug me-2"></i> Connect Vehicle
                     </a>
-                    <a href="#get-started" class="btn btn-outline-secondary btn-lg mb-2">
-                        <i class="fas fa-info-circle me-2"></i> Learn More
+                    <a href="{{ url_for('obd2_index') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
                     </a>
                 </div>
             </div>
@@ -166,53 +200,41 @@
 <!-- Features Section -->
 <div class="container mb-5">
     <div class="text-center mb-5">
-        <h2>Complete Diagnostic Solutions</h2>
-        <p class="text-muted">Multiple ways to diagnose and troubleshoot your vehicle</p>
+        <h2 style="color: #17a2b8; font-size: 2.2rem; font-weight: 700;">Professional OBD2 Features</h2>
+        <p class="text-muted fs-5">Complete diagnostic solution for modern vehicles</p>
     </div>
     
     <div class="row g-4">
         <div class="col-md-4">
             <div class="feature-card">
-                <div class="feature-image-container">
-                    <img src="https://cdn4.iconfinder.com/data/icons/car-maintenance-2/64/car-service-diagnostics-tool-vehicle-512.png" class="feature-image" alt="OBD2 Diagnostics">
-                </div>
                 <div class="feature-card-body text-center">
                     <div class="feature-icon">
-                        <i class="fas fa-plug"></i>
+                        <i class="fas fa-search-plus"></i>
                     </div>
-                    <h3 class="feature-title">OBD2 Diagnostics</h3>
-                    <p class="feature-text">Connect directly to your vehicle's OBD2 port with a USB cable to read diagnostic trouble codes, sensor data, and get real-time metrics.</p>
-                    <a href="{{ url_for('obd2_index') }}" class="btn btn-outline-info mt-3">Connect OBD2</a>
+                    <h3 class="feature-title">DTC Code Analysis</h3>
+                    <p class="feature-text">Read, analyze and clear Diagnostic Trouble Codes (DTCs) with AI-powered explanations and repair recommendations for faster troubleshooting.</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="feature-card">
-                <div class="feature-image-container">
-                    <img src="https://cdn4.iconfinder.com/data/icons/car-maintenance-2/64/car-service-mechanic-vehicle-repair-512.png" class="feature-image" alt="Visual Inspection">
-                </div>
                 <div class="feature-card-body text-center">
                     <div class="feature-icon">
-                        <i class="fas fa-camera"></i>
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <h3 class="feature-title">Visual Diagnostics</h3>
-                    <p class="feature-text">Use your device's camera to capture images of vehicle problems. Our AI will analyze the visuals and identify potential issues.</p>
-                    <a href="{{ url_for('diagnostic') }}" class="btn btn-outline-info mt-3">Visual Diagnosis</a>
+                    <h3 class="feature-title">Live Data Monitoring</h3>
+                    <p class="feature-text">Real-time sensor data streaming with interactive charts. Monitor engine parameters, fuel trims, oxygen sensors and more in real-time.</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="feature-card">
-                <div class="feature-image-container">
-                    <img src="https://cdn1.iconfinder.com/data/icons/car-engine-dashboard-lights/237/dashboard-car-alarm-engine-256.png" class="feature-image" alt="Audio Diagnostics">
-                </div>
                 <div class="feature-card-body text-center">
                     <div class="feature-icon">
-                        <i class="fas fa-microphone"></i>
+                        <i class="fas fa-tools"></i>
                     </div>
-                    <h3 class="feature-title">Audio Diagnostics</h3>
-                    <p class="feature-text">Record unusual sounds from your vehicle. Our advanced AI will analyze the audio to help identify the source of the noise.</p>
-                    <a href="{{ url_for('diagnostic') }}" class="btn btn-outline-info mt-3">Audio Diagnosis</a>
+                    <h3 class="feature-title">APS Calibration</h3>
+                    <p class="feature-text">Advanced Accelerator Pedal Position Sensor calibration tools for throttle body service and idle relearn procedures.</p>
                 </div>
             </div>
         </div>
@@ -222,10 +244,10 @@
 <!-- CTA Section -->
 <div class="cta-section">
     <div class="container">
-        <h2 class="cta-heading">AI-Powered Diagnostic Technology</h2>
-        <p class="cta-text">Our application combines advanced OBD2 diagnostics with Anthropic's Claude AI to provide accurate analysis and actionable repair recommendations for your vehicle.</p>
-        <a href="{{ url_for('obd2_index') }}" class="btn btn-primary btn-lg">
-            <i class="fas fa-stethoscope me-2"></i> Start Diagnosing
+        <h2 class="cta-heading">AI-Enhanced OBD2 Technology</h2>
+        <p class="cta-text">Our professional diagnostic tool combines direct OBD2 hardware access with Anthropic's Claude AI for intelligent fault analysis, repair recommendations, and comprehensive vehicle health assessments.</p>
+        <a href="#get-started" class="btn btn-primary btn-lg">
+            <i class="fas fa-rocket me-2"></i> Start Diagnosing Now
         </a>
     </div>
 </div>
@@ -235,38 +257,52 @@
     <div class="get-started-section">
         <div class="row align-items-center">
             <div class="col-lg-6">
-                <h2 class="mb-4">Get Started With Your Vehicle</h2>
-                <p class="mb-4">Enter your vehicle information below to begin the diagnostic process. This helps us provide more accurate results tailored to your specific car model.</p>
+                <h2 class="mb-4" style="color: #17a2b8; font-weight: 700;">Connect Your Vehicle</h2>
+                <p class="mb-4 fs-5">Enter your vehicle information below to begin professional OBD2 diagnostics. Our system will provide vehicle-specific analysis and repair procedures.</p>
                 <ul class="list-unstyled">
-                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Personalized diagnostics for your vehicle</li>
-                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> More accurate repair recommendations</li>
-                    <li class="mb-3"><i class="fas fa-check-circle text-success me-2"></i> Better cost estimates for needed repairs</li>
+                    <li class="mb-3 d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-3 fs-5"></i> 
+                        <span>Professional-grade DTC analysis with AI recommendations</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-3 fs-5"></i> 
+                        <span>Real-time sensor monitoring and data logging</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-3 fs-5"></i> 
+                        <span>Advanced calibration and programming tools</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success me-3 fs-5"></i> 
+                        <span>Compatible with all OBD2 vehicles (1996+)</span>
+                    </li>
                 </ul>
             </div>
             <div class="col-lg-6">
                 <div class="car-form">
+                    <h4 class="mb-4 text-center" style="color: #17a2b8;">Vehicle Information</h4>
                     <form action="{{ url_for('vehicle_info') }}" method="POST">
                         <div class="mb-3">
-                            <label for="make" class="form-label">Vehicle Make</label>
-                            <input type="text" class="form-control" id="make" name="make" placeholder="e.g., Toyota, Ford, Honda" required>
+                            <label for="make" class="form-label fw-bold">Vehicle Make</label>
+                            <input type="text" class="form-control form-control-lg" id="make" name="make" placeholder="e.g., Toyota, Ford, BMW" required>
                         </div>
                         <div class="mb-3">
-                            <label for="model" class="form-label">Vehicle Model</label>
-                            <input type="text" class="form-control" id="model" name="model" placeholder="e.g., Camry, F-150, Civic" required>
+                            <label for="model" class="form-label fw-bold">Vehicle Model</label>
+                            <input type="text" class="form-control form-control-lg" id="model" name="model" placeholder="e.g., Camry, F-150, 3 Series" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="year" class="form-label">Year</label>
-                                <input type="number" class="form-control" id="year" name="year" min="1980" max="2025" placeholder="e.g., 2018" required>
+                                <label for="year" class="form-label fw-bold">Year</label>
+                                <input type="number" class="form-control form-control-lg" id="year" name="year" min="1996" max="2025" placeholder="e.g., 2020" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="mileage" class="form-label">Mileage (optional)</label>
-                                <input type="number" class="form-control" id="mileage" name="mileage" min="0" placeholder="e.g., 45000">
+                                <label for="mileage" class="form-label fw-bold">Mileage</label>
+                                <input type="number" class="form-control form-control-lg" id="mileage" name="mileage" min="0" placeholder="e.g., 45000">
                             </div>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-arrow-right me-2"></i> Continue
+                                <i class="fas fa-plug me-2"></i> Connect to Vehicle
                             </button>
                         </div>
                     </form>

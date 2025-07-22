@@ -1,217 +1,461 @@
 /**
- * Custom CSS for Automotive Diagnostic AI Assistant
- * Uses Bootstrap dark theme
+ * OBD2 Diagnostic Pro - Professional Design System
+ * Color Palette: Teal (#17a2b8), White (#ffffff), Black (#000000), Dark Grey (#232b36)
  */
 
-/* Diagnostic severity indicators */
-.severity-indicator {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    margin-right: 10px;
+/* CSS Variables for Design System */
+:root {
+    /* Primary Colors */
+    --primary-teal: #17a2b8;
+    --primary-teal-dark: #138496;
+    --primary-teal-darker: #117a8b;
+    --primary-teal-light: rgba(23, 162, 184, 0.1);
+    --primary-teal-glow: rgba(23, 162, 184, 0.3);
+    
+    /* Neutral Colors */
+    --black: #000000;
+    --white: #ffffff;
+    --grey-dark: #232b36;
+    --grey-medium: #2c3542;
+    --grey-light: #495057;
+    --grey-lighter: #6c757d;
+    --grey-lightest: #adb5bd;
+    --grey-text: #e9ecef;
+    
+    /* Status Colors */
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --info: var(--primary-teal);
+    
+    /* Shadows & Effects */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.25);
+    --shadow-glow: 0 0 20px var(--primary-teal-glow);
+    
+    /* Border Radius */
+    --radius-sm: 2px;
+    --radius-md: 3px;
+    --radius-lg: 6px;
+    --radius-xl: 8px;
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    /* Typography */
+    --font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-mono: 'Fira Code', 'Consolas', 'Monaco', monospace;
 }
 
-.severity-low {
-    background-color: var(--bs-success);
+/* Global Styles */
+* {
+    box-sizing: border-box;
 }
 
-.severity-medium {
-    background-color: var(--bs-warning);
+body {
+    font-family: var(--font-primary);
+    background: linear-gradient(135deg, var(--black) 0%, var(--grey-dark) 100%);
+    color: var(--grey-text);
+    line-height: 1.6;
 }
 
-.severity-high {
-    background-color: var(--bs-danger);
+/* Professional Button System */
+.btn {
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all var(--transition-normal);
+    border: none;
+    box-shadow: var(--shadow-sm);
 }
 
-.severity-critical {
-    background-color: var(--bs-danger);
-    box-shadow: 0 0 8px var(--bs-danger);
-    animation: pulse 2s infinite;
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
+    color: var(--white);
 }
 
-.severity-unknown {
-    background-color: var(--bs-secondary);
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-teal-dark), var(--primary-teal-darker));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow), var(--shadow-md);
 }
 
-/* Camera viewport styling */
-#video-container {
-    position: relative;
-    width: 100%;
-    max-width: 640px;
-    margin: 0 auto;
-    border: 2px solid var(--bs-primary);
-    border-radius: 8px;
+.btn-outline-primary {
+    border: 2px solid var(--primary-teal);
+    color: var(--primary-teal);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-teal);
+    color: var(--white);
+    box-shadow: var(--shadow-glow);
+}
+
+/* Professional Cards */
+.card {
+    background: var(--grey-medium);
+    border: 1px solid var(--grey-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
     overflow: hidden;
 }
 
-#video {
-    width: 100%;
-    display: none;
-    background-color: var(--bs-dark);
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
 }
 
-#canvas {
-    display: none;
+.card-header {
+    background: linear-gradient(135deg, var(--grey-dark), var(--grey-medium));
+    border-bottom: 2px solid var(--primary-teal);
 }
 
-#image-preview {
-    max-width: 100%;
-    height: auto;
-    display: none;
-    border-radius: 8px;
+/* Professional Forms */
+.form-control {
+    background: var(--grey-dark);
+    border: 2px solid var(--grey-light);
+    color: var(--grey-text);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
 }
 
-/* Voice recording styling */
-.recording-indicator {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background-color: var(--bs-danger);
-    margin-right: 10px;
-    animation: pulse 1s infinite;
+.form-control:focus {
+    background: var(--grey-medium);
+    border-color: var(--primary-teal);
+    color: var(--white);
+    box-shadow: 0 0 0 0.2rem var(--primary-teal-light);
 }
 
-/* Repair difficulty indicators */
-.difficulty-indicator {
-    display: inline-flex;
-    margin-bottom: 10px;
+.form-label {
+    color: var(--primary-teal);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
 }
 
-.difficulty-dot {
+/* Professional Alerts */
+.alert {
+    border-radius: var(--radius-lg);
+    border: none;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+}
+
+.alert-success {
+    background: rgba(40, 167, 69, 0.15);
+    border-left: 4px solid var(--success);
+    color: #b8e6c1;
+}
+
+.alert-warning {
+    background: rgba(255, 193, 7, 0.15);
+    border-left: 4px solid var(--warning);
+    color: #fff3cd;
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.15);
+    border-left: 4px solid var(--danger);
+    color: #f8d7da;
+}
+
+/* OBD2 Diagnostic Specific Components */
+.diagnostic-card {
+    background: var(--grey-medium);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    border-left: 4px solid var(--primary-teal);
+}
+
+.diagnostic-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+    border-left-color: var(--primary-teal-dark);
+}
+
+.dtc-code {
+    font-family: var(--font-mono);
+    background: var(--black);
+    color: var(--primary-teal);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.sensor-reading {
+    background: var(--grey-dark);
+    border: 1px solid var(--grey-light);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+    transition: all var(--transition-normal);
+}
+
+.sensor-reading:hover {
+    border-color: var(--primary-teal);
+    box-shadow: var(--shadow-glow);
+}
+
+.sensor-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-teal);
+    font-family: var(--font-mono);
+}
+
+.sensor-label {
+    color: var(--grey-lightest);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+}
+
+/* Status Indicators */
+.status-indicator {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    margin-right: 4px;
-    background-color: var(--bs-gray);
-}
-
-.difficulty-dot.active {
-    background-color: var(--bs-primary);
-}
-
-/* Vehicle info card */
-.vehicle-info-card {
-    border-left: 4px solid var(--bs-primary);
-}
-
-/* Results highlight */
-.diagnosis-card {
-    border: none;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s ease;
-}
-
-.diagnosis-card:hover {
-    transform: translateY(-5px);
-}
-
-.diagnosis-low {
-    border-left: 5px solid var(--bs-success);
-}
-
-.diagnosis-medium {
-    border-left: 5px solid var(--bs-warning);
-}
-
-.diagnosis-high, .diagnosis-critical {
-    border-left: 5px solid var(--bs-danger);
-}
-
-.diagnosis-unknown {
-    border-left: 5px solid var(--bs-secondary);
-}
-
-/* Safety warnings */
-.safety-warning {
-    border-left: 5px solid var(--bs-danger);
-    padding: 15px;
-    margin-bottom: 15px;
-    background-color: rgba(var(--bs-danger-rgb), 0.1);
-}
-
-.safety-icon {
-    color: var(--bs-danger);
-    font-size: 1.5rem;
-    margin-right: 10px;
-}
-
-/* Animation for critical indicators */
-@keyframes pulse {
-    0% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
-/* Repair steps */
-.repair-steps {
-    padding-left: 20px;
-}
-
-.repair-steps li {
-    margin-bottom: 10px;
+    display: inline-block;
+    margin-right: 0.5rem;
     position: relative;
 }
 
-.repair-steps li::before {
-    content: "→";
+.status-indicator.connected {
+    background: var(--success);
+    animation: pulse-success 2s infinite;
+}
+
+.status-indicator.disconnected {
+    background: var(--danger);
+}
+
+.status-indicator.connecting {
+    background: var(--warning);
+    animation: pulse-warning 1s infinite;
+}
+
+@keyframes pulse-success {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+@keyframes pulse-warning {
+    0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+/* Professional Progress Bars */
+.progress {
+    background: var(--grey-dark);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: inset var(--shadow-sm);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-teal), var(--primary-teal-dark));
+    animation: progress-shimmer 2s infinite linear;
+}
+
+@keyframes progress-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Severity Indicators */
+.severity-critical {
+    background: var(--danger);
+    color: var(--white);
+    animation: critical-pulse 1s infinite;
+}
+
+.severity-high {
+    background: #fd7e14;
+    color: var(--white);
+}
+
+.severity-medium {
+    background: var(--warning);
+    color: var(--black);
+}
+
+.severity-low {
+    background: var(--success);
+    color: var(--white);
+}
+
+@keyframes critical-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Professional Navigation */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.nav-link:hover {
+    color: var(--primary-teal) !important;
+}
+
+.nav-link.active {
+    color: var(--primary-teal) !important;
+    position: relative;
+}
+
+.nav-link.active::after {
+    content: '';
     position: absolute;
-    left: -20px;
-    color: var(--bs-primary);
-}
-
-/* Make sure images don't overflow */
-img {
-    max-width: 100%;
-    height: auto;
-}
-
-/* Loading overlay for analysis */
-.loading-overlay {
-    position: fixed;
-    top: 0;
+    bottom: -2px;
     left: 0;
     right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 1050;
-    color: white;
+    height: 2px;
+    background: var(--primary-teal);
 }
 
+/* Professional Tables */
+.table-dark {
+    background: var(--grey-medium);
+    color: var(--grey-text);
+}
+
+.table-dark th {
+    background: var(--grey-dark);
+    border-color: var(--primary-teal);
+    color: var(--primary-teal);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+.table-dark td {
+    border-color: var(--grey-light);
+}
+
+/* Loading Animations */
 .loading-spinner {
-    width: 5rem;
-    height: 5rem;
-    margin-bottom: 1rem;
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--grey-light);
+    border-top: 4px solid var(--primary-teal);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-/* Responsive adjustments */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .container {
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-    
     .card {
-        margin-bottom: 15px;
+        margin-bottom: 1rem;
     }
     
-    h1 {
-        font-size: 1.8rem;
-    }
-    
-    h2 {
+    .sensor-value {
         font-size: 1.5rem;
     }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Professional Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--grey-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-teal);
+    border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-teal-dark);
+}
+
+/* Focus States for Accessibility */
+*:focus {
+    outline: 2px solid var(--primary-teal);
+    outline-offset: 2px;
+}
+
+/* Professional Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.text-primary {
+    color: var(--primary-teal) !important;
+}
+
+.bg-primary {
+    background: var(--primary-teal) !important;
+}
+
+/* Professional Footer */
+footer {
+    background: linear-gradient(135deg, var(--black), var(--grey-dark));
+    border-top: 1px solid var(--primary-teal);
+}
+
+/* Live Data Dashboard */
+.live-data-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.live-data-item {
+    background: var(--grey-medium);
+    border: 1px solid var(--grey-light);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+    transition: all var(--transition-normal);
+}
+
+.live-data-item:hover {
+    border-color: var(--primary-teal);
+    box-shadow: var(--shadow-glow);
+}
+
+/* Professional Modal Enhancements */
+.modal-content {
+    background: var(--grey-medium);
+    border: 1px solid var(--primary-teal);
+    border-radius: var(--radius-lg);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--grey-dark), var(--grey-medium));
+    border-bottom: 2px solid var(--primary-teal);
 }

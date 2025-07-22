@@ -1,40 +1,52 @@
 import os
 import logging
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-from utils.image_processor import process_image
-from utils.speech_processor import process_speech
+from config import get_config
+from database import db
 from utils.diagnostic_engine import analyze_diagnostic_data
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+# Create Flask app with configuration
+def create_app():
+    app = Flask(__name__)
+    config_class = get_config()
+    app.config.from_object(config_class)
+    
+    # Initialize configuration
+    config_class.init_app(app)
+    
+    # Add proxy fix for proper URL generation
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
+    return app
 
-# Database setup with SQLAlchemy
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
-
-# Create Flask app
-app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "automotive-diagnostic-assistant-key")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # For proper URL generation with https
-
-# Configure database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-}
+app = create_app()
 
 # Initialize the database with the app
 db.init_app(app)
 
+# Import models to register them with SQLAlchemy
+import models
+
+# Initialize the DTC database
+try:
+    from utils.dtc_database import initialize_dtc_database
+    with app.app_context():
+        # Models are already imported above
+        db.create_all()
+        app.logger.info("Database tables created")
+        
+        # Initialize DTC database
+        if initialize_dtc_database():
+            app.logger.info("DTC database initialized successfully")
+        else:
+            app.logger.warning("Failed to initialize DTC database")
+except Exception as e:
+    app.logger.error(f"Error during database initialization: {e}")
+
 @app.route('/')
 def index():
-    """Render the main page with the camera and voice input options."""
+    """Render the main OBD2 diagnostic page."""
     return render_template('index.html')
 
 @app.route('/vehicle-info', methods=['POST'])
@@ -53,95 +65,7 @@ def vehicle_info():
         'mileage': mileage
     }
     
-    return redirect(url_for('diagnostic'))
-
-@app.route('/diagnostic')
-def diagnostic():
-    """Render the diagnostic page with camera and voice input."""
-    # Check if vehicle info exists in session
-    if 'vehicle_info' not in session:
-        return redirect(url_for('index'))
-    
-    vehicle_info = session['vehicle_info']
-    return render_template('diagnostic.html', vehicle_info=vehicle_info)
-
-@app.route('/process-image', methods=['POST'])
-def process_image_route():
-    """Process an image from the camera and return diagnostic information."""
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image provided'}), 400
-    
-    image_file = request.files['image']
-    vehicle_info = session.get('vehicle_info', {})
-    
-    try:
-        # Process the image using OpenCV
-        image_results = process_image(image_file, vehicle_info)
-        
-        # Store results in session
-        if 'diagnostic_data' not in session:
-            session['diagnostic_data'] = {}
-        
-        session['diagnostic_data']['image_results'] = image_results
-        return jsonify({'success': True, 'results': image_results})
-    
-    except Exception as e:
-        logging.error(f"Error processing image: {str(e)}")
-        return jsonify({'error': f'Error processing image: {str(e)}'}), 500
-
-@app.route('/process-voice', methods=['POST'])
-def process_voice_route():
-    """Process voice input and return diagnostic information."""
-    if 'audio' not in request.files:
-        return jsonify({'error': 'No audio provided'}), 400
-    
-    audio_file = request.files['audio']
-    vehicle_info = session.get('vehicle_info', {})
-    
-    try:
-        # Process the audio using SpeechRecognition
-        voice_results = process_speech(audio_file, vehicle_info)
-        
-        # Store results in session
-        if 'diagnostic_data' not in session:
-            session['diagnostic_data'] = {}
-        
-        session['diagnostic_data']['voice_results'] = voice_results
-        return jsonify({'success': True, 'results': voice_results})
-    
-    except Exception as e:
-        logging.error(f"Error processing voice: {str(e)}")
-        return jsonify({'error': f'Error processing voice: {str(e)}'}), 500
-
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    """Analyze the collected data and provide diagnostic results."""
-    if 'diagnostic_data' not in session:
-        return redirect(url_for('diagnostic'))
-    
-    diagnostic_data = session['diagnostic_data']
-    vehicle_info = session.get('vehicle_info', {})
-    
-    # Combine data from image and voice analysis
-    analysis_results = analyze_diagnostic_data(diagnostic_data, vehicle_info)
-    
-    # Store analysis results in session
-    session['analysis_results'] = analysis_results
-    
-    return redirect(url_for('results'))
-
-@app.route('/results')
-def results():
-    """Display the diagnostic results and recommendations."""
-    if 'analysis_results' not in session:
-        return redirect(url_for('diagnostic'))
-    
-    analysis_results = session['analysis_results']
-    vehicle_info = session.get('vehicle_info', {})
-    
-    return render_template('results.html', 
-                           analysis_results=analysis_results,
-                           vehicle_info=vehicle_info)
+    return redirect(url_for('obd2_connect'))
 
 @app.route('/reset', methods=['GET', 'POST'])
 def reset():
@@ -281,6 +205,7 @@ def obd2_scan():
                 session_obj.success = False
                 session_obj.notes = 'Failed to connect to vehicle'
                 db.session.commit()
+                app.logger.error("Failed to connect to OBD2 port")
                 return jsonify({'error': 'Could not connect to vehicle OBD port'}), 500
             
             # Get vehicle info from OBD
@@ -417,6 +342,56 @@ def obd2_aps_calibration():
     
     return render_template('obd2/aps_calibration.html', vehicle_info=vehicle)
 
+@app.route('/obd2/live-data-monitoring')
+def obd2_live_data_monitoring():
+    """Live data monitoring page for real-time sensor readings."""
+    if 'vehicle_id' not in session:
+        return redirect(url_for('obd2_connect'))
+    
+    vehicle_id = session['vehicle_id']
+    
+    # Get vehicle from database
+    from models import Vehicle
+    vehicle = Vehicle.query.get(vehicle_id)
+    
+    if not vehicle:
+        return redirect(url_for('obd2_connect'))
+    
+    return render_template('obd2/live_data.html', vehicle_info=vehicle)
+
+@app.route('/api/obd2/live-data', methods=['GET'])
+def api_live_data():
+    """API endpoint to get live sensor data from the vehicle."""
+    if 'vehicle_id' not in session:
+        return jsonify({'error': 'No vehicle selected'}), 400
+    
+    try:
+        # Import the OBD2 connector
+        from utils.obd2_connector import create_obd2_connector
+        
+        # Create a connector
+        connector = create_obd2_connector()
+        
+        # Connect to vehicle
+        connection_success = connector.connect()
+        if not connection_success:
+            return jsonify({'error': 'Could not connect to vehicle'}), 500
+        
+        # Read live data
+        sensor_data = connector.read_live_data()
+        
+        # Disconnect
+        connector.disconnect()
+        
+        return jsonify({
+            'success': True,
+            'data': sensor_data,
+            'timestamp': __import__('datetime').datetime.now().isoformat()
+        })
+    except Exception as e:
+        app.logger.error(f"Error reading live data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/obd2/aps/read', methods=['GET'])
 def api_read_aps():
     """API endpoint to read current APS values from the vehicle."""
@@ -550,13 +525,6 @@ def obd2_results(session_id):
         sensor_readings=sensor_readings,
         results=results
     )
-
-# Initialize the database tables
-with app.app_context():
-    # Import models to ensure they're registered with SQLAlchemy
-    import models
-    db.create_all()
-    app.logger.info("Database tables created")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

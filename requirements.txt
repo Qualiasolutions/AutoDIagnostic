@@ -1,0 +1,29 @@
+# OBD2 Diagnostic Pro - Requirements
+# Core Framework
+flask>=3.1.0
+flask-sqlalchemy>=3.1.1
+sqlalchemy>=2.0.40
+werkzeug>=3.1.3
+
+# Database
+psycopg2-binary>=2.9.10
+email-validator>=2.2.0
+
+# OBD2 Hardware Communication
+pyserial>=3.5
+python-obd>=0.7.1
+pybluez>=0.23  # For Bluetooth OBD2 adapters
+bleak>=0.22.0  # Modern Bluetooth Low Energy support
+
+# AI Integration
+anthropic>=0.51.0
+openai>=1.78.0
+
+# Production Server
+gunicorn>=23.0.0
+
+# Development Dependencies (optional)
+pytest>=7.0.0
+pytest-flask>=1.2.0
+black>=23.0.0
+flake8>=6.0.0 

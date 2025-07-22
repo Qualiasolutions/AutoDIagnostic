@@ -346,16 +346,26 @@
                         portList.innerHTML = '';
                         
                         // Add ports to list
-                        data.ports.forEach(port => {
+                        data.ports.forEach(portInfo => {
                             const portItem = document.createElement('a');
                             portItem.className = 'list-group-item port-option';
                             portItem.href = '#';
+                            
+                            // Choose icon based on connection type
+                            const icon = portInfo.type === 'Bluetooth' ? 'fa-bluetooth' : 'fa-usb';
+                            const badgeClass = portInfo.type === 'Bluetooth' ? 'bg-info' : 'bg-secondary';
+                            
                             portItem.innerHTML = `
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-usb me-2"></i> ${port}
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="fas ${icon} me-2"></i>
+                                            <strong>${portInfo.port}</strong>
+                                        </div>
+                                        <small class="text-muted">${portInfo.description}</small>
+                                        ${portInfo.manufacturer ? `<br><small class="text-muted">Manufacturer: ${portInfo.manufacturer}</small>` : ''}
                                     </div>
-                                    <span class="badge bg-secondary">OBD2</span>
+                                    <span class="badge ${badgeClass}">${portInfo.type}</span>
                                 </div>
                             `;
                             
@@ -371,7 +381,7 @@
                                 this.classList.add('selected');
                                 
                                 // Update selected port
-                                selectedPort = port;
+                                selectedPort = portInfo.port;
                                 
                                 // Enable connect button
                                 connectButton.disabled = false;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Automotive Diagnostic AI Assistant{% endblock %}</title>
+    <title>{% block title %}OBD2 Diagnostic Pro{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
@@ -124,7 +124,7 @@
             <div class="container">
                 <a class="navbar-brand" href="{{ url_for('index') }}">
                     <img src="https://cdn2.iconfinder.com/data/icons/car-service-2/256/Car_Service-12-512.png" alt="Logo">
-                    <span>Auto Diagnostic AI</span>
+                    <span>OBD2 Diagnostic Pro</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -138,20 +138,16 @@
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {% if '/obd2' in request.path %}active{% endif %}" href="#" id="diagDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-plug me-1"></i> OBD2 Diagnostics
+                                <i class="fas fa-plug me-1"></i> OBD2 Tools
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="diagDropdown">
-                                <li><a class="dropdown-item" href="{{ url_for('obd2_index') }}">OBD2 Home</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('obd2_index') }}">Dashboard</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('obd2_connect') }}">Connect Vehicle</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('obd2_scan') }}">Diagnostic Scan</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('obd2_live_data_monitoring') }}">Live Data Monitor</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('obd2_aps_calibration') }}">APS Calibration</a></li>
                             </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path == url_for('diagnostic') %}active{% endif %}" href="{{ url_for('diagnostic') }}">
-                                <i class="fas fa-camera me-1"></i> Visual & Audio
-                            </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">
@@ -172,12 +168,12 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4 mb-4 mb-md-0">
-                    <h5>Auto Diagnostic AI</h5>
+                    <h5>OBD2 Diagnostic Pro</h5>
                     <p class="text-muted">
-                        Advanced AI-powered vehicle diagnostics with direct OBD2 connection, visual analysis, and audio recognition.
+                        Professional-grade OBD2 diagnostic tool with AI-powered analysis for automotive technicians and enthusiasts.
                     </p>
                     <div class="social-icons">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
                         <a href="#"><i class="fab fa-youtube"></i></a>
                     </div>
@@ -185,10 +181,10 @@
                 <div class="col-md-2 mb-4 mb-md-0">
                     <h5>Features</h5>
                     <ul class="footer-links">
-                        <li><a href="{{ url_for('obd2_index') }}">OBD2 Diagnostics</a></li>
-                        <li><a href="{{ url_for('diagnostic') }}">Visual Analysis</a></li>
-                        <li><a href="{{ url_for('diagnostic') }}">Audio Analysis</a></li>
+                        <li><a href="{{ url_for('obd2_index') }}">DTC Analysis</a></li>
+                        <li><a href="{{ url_for('obd2_live_data_monitoring') }}">Live Data</a></li>
                         <li><a href="{{ url_for('obd2_aps_calibration') }}">APS Calibration</a></li>
+                        <li><a href="{{ url_for('obd2_scan') }}">Vehicle Scan</a></li>
                     </ul>
                 </div>
                 <div class="col-md-2 mb-4 mb-md-0">
@@ -203,10 +199,10 @@
                 <div class="col-md-4">
                     <h5>About</h5>
                     <p class="text-muted">
-                        This application uses advanced AI technology powered by Anthropic's Claude to provide accurate vehicle diagnostics and repair recommendations.
+                        This professional diagnostic tool uses advanced AI technology powered by Anthropic's Claude to provide accurate OBD2 analysis and repair recommendations.
                     </p>
                     <p class="text-muted small">
-                        &copy; 2025 Auto Diagnostic AI
+                        &copy; 2025 OBD2 Diagnostic Pro
                     </p>
                 </div>
             </div>
@@ -240,7 +236,7 @@
                             </h2>
                             <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#helpAccordion">
                                 <div class="accordion-body">
-                                    Most vehicles manufactured after 1996 are compatible with OBD2 standard. This includes cars, light trucks, and SUVs from major manufacturers like Toyota, Honda, Ford, Chevrolet, and more.
+                                    Most vehicles manufactured after 1996 are compatible with OBD2 standard. This includes cars, light trucks, and SUVs from major manufacturers like Toyota, Honda, Ford, Chevrolet, BMW, Mercedes-Benz, and more.
                                 </div>
                             </div>
                         </div>
@@ -252,7 +248,7 @@
                             </h2>
                             <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#helpAccordion">
                                 <div class="accordion-body">
-                                    You need an ELM327-based OBD2-to-USB cable. These are widely available online and in auto parts stores. Look for ELM327 v1.5 or v2.1 with USB connection for best compatibility.
+                                    You need an ELM327-based OBD2-to-USB cable. These are widely available online and in auto parts stores. Look for ELM327 v1.5 or v2.1 with USB connection for best compatibility. Avoid cheap Bluetooth adapters as they can be unreliable.
                                 </div>
                             </div>
                         </div>
@@ -264,7 +260,7 @@
                             </h2>
                             <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#helpAccordion">
                                 <div class="accordion-body">
-                                    Yes, you can clear diagnostic trouble codes (DTCs) using the "Clear DTCs" function in the dashboard. This will reset the check engine light, but if the problem still exists, the light may come back on after driving.
+                                    Yes, you can clear diagnostic trouble codes (DTCs) using the "Clear DTCs" function in the dashboard. This will reset the check engine light, but if the underlying problem still exists, the light may return after driving cycles.
                                 </div>
                             </div>
                         </div>
@@ -276,7 +272,7 @@
                             </h2>
                             <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#helpAccordion">
                                 <div class="accordion-body">
-                                    APS (Accelerator Pedal Position Sensor) calibration allows you to adjust how your vehicle's electronic throttle control system responds to pedal input. This can help fix issues with throttle response, idle quality, and acceleration behavior. This feature should only be used by qualified technicians or experienced DIY mechanics.
+                                    APS (Accelerator Pedal Position Sensor) calibration allows you to adjust how your vehicle's electronic throttle control system responds to pedal input. This can help fix issues with throttle response, idle quality, and acceleration behavior. This feature should only be used by qualified technicians or experienced professionals.
                                 </div>
                             </div>
                         </div>

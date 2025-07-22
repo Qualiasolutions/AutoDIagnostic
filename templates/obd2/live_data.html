@@ -1,0 +1,822 @@
+{% extends "layout.html" %}
+
+{% block title %}Live Data Monitor - OBD2 Diagnostic Pro{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+<style>
+    .live-data-header {
+        background: linear-gradient(135deg, var(--grey-dark), var(--grey-medium));
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--primary-teal);
+    }
+    
+    .connection-status {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .data-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .sensor-gauge {
+        background: var(--grey-medium);
+        border: 1px solid var(--grey-light);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .sensor-gauge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-teal), var(--primary-teal-dark));
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+    }
+    
+    .sensor-gauge:hover::before {
+        opacity: 1;
+    }
+    
+    .sensor-gauge:hover {
+        border-color: var(--primary-teal);
+        box-shadow: var(--shadow-glow);
+        transform: translateY(-2px);
+    }
+    
+    .gauge-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .gauge-title {
+        font-size: 0.9rem;
+        color: var(--grey-lightest);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+    
+    .gauge-status {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+        animation: pulse-success 2s infinite;
+    }
+    
+    .gauge-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-teal);
+        font-family: var(--font-mono);
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+    
+    .gauge-unit {
+        font-size: 1rem;
+        color: var(--grey-lighter);
+        font-weight: 500;
+        margin-left: 0.5rem;
+    }
+    
+    .gauge-range {
+        font-size: 0.8rem;
+        color: var(--grey-lighter);
+        margin-top: 0.5rem;
+    }
+    
+    .charts-section {
+        background: var(--grey-medium);
+        border: 1px solid var(--grey-light);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        background: var(--grey-dark);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+    }
+    
+    .controls-panel {
+        background: var(--grey-medium);
+        border: 1px solid var(--grey-light);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .alert-critical {
+        animation: critical-pulse 1s infinite;
+        border-left: 4px solid var(--danger);
+    }
+    
+    .data-table {
+        background: var(--grey-medium);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+    
+    .freeze-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--danger);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+    }
+    
+    .sensor-gauge.frozen .freeze-indicator {
+        opacity: 1;
+        animation: pulse-danger 1s infinite;
+    }
+    
+    @keyframes pulse-danger {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    
+    .recording-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--danger);
+    }
+    
+    .recording-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--danger);
+        animation: pulse-danger 1s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="live-data-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-1 text-primary">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Live Data Monitor
+                </h1>
+                <p class="mb-3 text-muted">Real-time vehicle sensor monitoring and data analysis</p>
+                
+                <div class="connection-status">
+                    <div class="d-flex align-items-center">
+                        <span class="status-indicator connected" id="connection-indicator"></span>
+                        <span id="connection-text">Connected to {{ vehicle_info.make }} {{ vehicle_info.model }} ({{ vehicle_info.year }})</span>
+                    </div>
+                    <div class="d-flex align-items-center ms-3">
+                        <i class="fas fa-plug text-primary me-2"></i>
+                        <span class="text-muted" id="port-info">Auto-detected port</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 text-end">
+                <div class="mb-2">
+                    <span class="text-muted small">Last Update:</span>
+                    <div class="text-primary fw-bold" id="last-refresh">Never</div>
+                </div>
+                <div class="recording-indicator" id="recording-indicator" style="display: none;">
+                    <div class="recording-dot"></div>
+                    <span>Recording Data</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Controls Panel -->
+    <div class="controls-panel">
+        <div class="controls-grid">
+            <div>
+                <label class="form-label">Refresh Rate</label>
+                <select class="form-select" id="refresh-rate">
+                    <option value="1000">1 second</option>
+                    <option value="2000" selected>2 seconds</option>
+                    <option value="5000">5 seconds</option>
+                    <option value="10000">10 seconds</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="form-label">Monitor Mode</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="auto-refresh" checked>
+                    <label class="form-check-label" for="auto-refresh">Auto Refresh</label>
+                </div>
+            </div>
+            
+            <div>
+                <label class="form-label">Data Recording</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="data-recording">
+                    <label class="form-check-label" for="data-recording">Record to File</label>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" id="refresh-data-btn">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh Now
+                </button>
+                <button class="btn btn-outline-secondary" id="reset-charts-btn">
+                    <i class="fas fa-chart-line me-2"></i>Reset Charts
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading/Error States -->
+    <div class="alert alert-info" id="data-loading" style="display: none;">
+        <div class="d-flex align-items-center">
+            <div class="loading-spinner me-3"></div>
+            <div>Reading live sensor data from vehicle...</div>
+        </div>
+    </div>
+    
+    <div class="alert alert-danger" id="data-error" style="display: none;"></div>
+    
+    <!-- Live Data Grid -->
+    <div class="data-grid" id="sensor-data-container">
+        <!-- Sensor gauges will be dynamically populated here -->
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <h3 class="mb-4 text-primary">
+            <i class="fas fa-chart-line me-2"></i>
+            Real-time Sensor Trends
+        </h3>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <canvas id="engine-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="fuel-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="temperature-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="pressure-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Data Table -->
+    <div class="data-table">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Current Value</th>
+                        <th>Unit</th>
+                        <th>Normal Range</th>
+                        <th>Status</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body">
+                    <!-- Table rows will be dynamically populated -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Live Data Monitor JavaScript
+class LiveDataMonitor {
+    constructor() {
+        this.isRunning = false;
+        this.refreshInterval = null;
+        this.refreshRate = 2000;
+        this.isRecording = false;
+        this.recordedData = [];
+        this.charts = {};
+        this.sensorData = {};
+        this.sensorHistory = {};
+        this.maxHistoryPoints = 50;
+        
+        this.initializeCharts();
+        this.setupEventListeners();
+        this.startMonitoring();
+    }
+    
+    initializeCharts() {
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#e9ecef' }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#adb5bd' },
+                    grid: { color: 'rgba(173, 181, 189, 0.1)' }
+                },
+                y: {
+                    ticks: { color: '#adb5bd' },
+                    grid: { color: 'rgba(173, 181, 189, 0.1)' }
+                }
+            },
+            elements: {
+                line: {
+                    tension: 0.4,
+                    borderWidth: 2
+                },
+                point: {
+                    radius: 3
+                }
+            }
+        };
+        
+        // Engine Chart (RPM, Load, Throttle)
+        this.charts.engine = new Chart(document.getElementById('engine-chart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'RPM',
+                        data: [],
+                        borderColor: '#17a2b8',
+                        backgroundColor: 'rgba(23, 162, 184, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Engine Load (%)',
+                        data: [],
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'Throttle Position (%)',
+                        data: [],
+                        borderColor: '#ffc107',
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    x: chartOptions.scales.x,
+                    y: {
+                        ...chartOptions.scales.y,
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'RPM', color: '#e9ecef' }
+                    },
+                    y1: {
+                        ...chartOptions.scales.y,
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Percentage (%)', color: '#e9ecef' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+        
+        // Fuel Chart (Fuel Trims, Pressure)
+        this.charts.fuel = new Chart(document.getElementById('fuel-chart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Short Fuel Trim 1 (%)',
+                        data: [],
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)'
+                    },
+                    {
+                        label: 'Long Fuel Trim 1 (%)',
+                        data: [],
+                        borderColor: '#fd7e14',
+                        backgroundColor: 'rgba(253, 126, 20, 0.1)'
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+        
+        // Temperature Chart
+        this.charts.temperature = new Chart(document.getElementById('temperature-chart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Coolant Temp (°C)',
+                        data: [],
+                        borderColor: '#17a2b8',
+                        backgroundColor: 'rgba(23, 162, 184, 0.1)'
+                    },
+                    {
+                        label: 'Intake Temp (°C)',
+                        data: [],
+                        borderColor: '#6f42c1',
+                        backgroundColor: 'rgba(111, 66, 193, 0.1)'
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+        
+        // Pressure Chart
+        this.charts.pressure = new Chart(document.getElementById('pressure-chart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Fuel Pressure (kPa)',
+                        data: [],
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)'
+                    },
+                    {
+                        label: 'Intake Pressure (kPa)',
+                        data: [],
+                        borderColor: '#20c997',
+                        backgroundColor: 'rgba(32, 201, 151, 0.1)'
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+    }
+    
+    setupEventListeners() {
+        // Auto-refresh toggle
+        document.getElementById('auto-refresh').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                this.startMonitoring();
+            } else {
+                this.stopMonitoring();
+            }
+        });
+        
+        // Refresh rate change
+        document.getElementById('refresh-rate').addEventListener('change', (e) => {
+            this.refreshRate = parseInt(e.target.value);
+            if (this.isRunning) {
+                this.stopMonitoring();
+                this.startMonitoring();
+            }
+        });
+        
+        // Manual refresh button
+        document.getElementById('refresh-data-btn').addEventListener('click', () => {
+            this.refreshData();
+        });
+        
+        // Reset charts button
+        document.getElementById('reset-charts-btn').addEventListener('click', () => {
+            this.resetCharts();
+        });
+        
+        // Data recording toggle
+        document.getElementById('data-recording').addEventListener('change', (e) => {
+            this.isRecording = e.target.checked;
+            document.getElementById('recording-indicator').style.display = 
+                this.isRecording ? 'flex' : 'none';
+        });
+    }
+    
+    startMonitoring() {
+        if (this.isRunning) return;
+        
+        this.isRunning = true;
+        this.refreshData(); // Initial load
+        
+        this.refreshInterval = setInterval(() => {
+            this.refreshData();
+        }, this.refreshRate);
+        
+        console.log(`Live monitoring started (${this.refreshRate}ms interval)`);
+    }
+    
+    stopMonitoring() {
+        if (!this.isRunning) return;
+        
+        this.isRunning = false;
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
+        
+        console.log('Live monitoring stopped');
+    }
+    
+    async refreshData() {
+        const loadingElement = document.getElementById('data-loading');
+        const errorElement = document.getElementById('data-error');
+        
+        loadingElement.style.display = 'block';
+        errorElement.style.display = 'none';
+        
+        try {
+            const response = await fetch('/api/obd2/live-data');
+            const result = await response.json();
+            
+            if (result.success) {
+                this.sensorData = result.data;
+                this.updateDisplay();
+                this.updateCharts();
+                this.updateDataTable();
+                this.updateTimestamp(result.timestamp);
+                
+                if (this.isRecording) {
+                    this.recordDataPoint();
+                }
+            } else {
+                this.showError(result.error || 'Failed to fetch live data');
+            }
+        } catch (error) {
+            console.error('Error fetching live data:', error);
+            this.showError('Network error while fetching data');
+        } finally {
+            loadingElement.style.display = 'none';
+        }
+    }
+    
+    updateDisplay() {
+        const container = document.getElementById('sensor-data-container');
+        
+        // Clear existing gauges
+        container.innerHTML = '';
+        
+        // Create gauge for each sensor
+        Object.entries(this.sensorData).forEach(([sensorName, data]) => {
+            const gauge = this.createSensorGauge(sensorName, data);
+            container.appendChild(gauge);
+        });
+    }
+    
+    createSensorGauge(name, data) {
+        const col = document.createElement('div');
+        col.className = 'sensor-gauge';
+        col.setAttribute('data-sensor', name);
+        
+        const status = this.getSensorStatus(name, data.value);
+        const range = this.getSensorRange(name);
+        const trend = this.getSensorTrend(name, data.value);
+        
+        col.innerHTML = `
+            <div class="freeze-indicator"></div>
+            <div class="gauge-header">
+                <div class="gauge-title">${data.name || name}</div>
+                <div class="gauge-status ${status.class}" title="${status.text}"></div>
+            </div>
+            <div class="gauge-value">
+                ${this.formatValue(data.value)}
+                <span class="gauge-unit">${data.unit}</span>
+            </div>
+            <div class="gauge-range">${range}</div>
+            <div class="text-center mt-2">
+                <span class="badge ${trend.class}">${trend.text}</span>
+            </div>
+        `;
+        
+        return col;
+    }
+    
+    updateCharts() {
+        const timestamp = new Date().toLocaleTimeString();
+        
+        // Update engine chart
+        if (this.sensorData.RPM || this.sensorData.ENGINE_LOAD || this.sensorData.THROTTLE_POS) {
+            this.updateChart('engine', timestamp, [
+                { key: 'RPM', dataset: 0 },
+                { key: 'ENGINE_LOAD', dataset: 1 },
+                { key: 'THROTTLE_POS', dataset: 2 }
+            ]);
+        }
+        
+        // Update fuel chart
+        if (this.sensorData.SHORT_FUEL_TRIM_1 || this.sensorData.LONG_FUEL_TRIM_1) {
+            this.updateChart('fuel', timestamp, [
+                { key: 'SHORT_FUEL_TRIM_1', dataset: 0 },
+                { key: 'LONG_FUEL_TRIM_1', dataset: 1 }
+            ]);
+        }
+        
+        // Update temperature chart
+        if (this.sensorData.COOLANT_TEMP || this.sensorData.INTAKE_TEMP) {
+            this.updateChart('temperature', timestamp, [
+                { key: 'COOLANT_TEMP', dataset: 0 },
+                { key: 'INTAKE_TEMP', dataset: 1 }
+            ]);
+        }
+        
+        // Update pressure chart
+        if (this.sensorData.FUEL_PRESSURE || this.sensorData.INTAKE_PRESSURE) {
+            this.updateChart('pressure', timestamp, [
+                { key: 'FUEL_PRESSURE', dataset: 0 },
+                { key: 'INTAKE_PRESSURE', dataset: 1 }
+            ]);
+        }
+    }
+    
+    updateChart(chartName, timestamp, dataMapping) {
+        const chart = this.charts[chartName];
+        if (!chart) return;
+        
+        // Add new timestamp
+        chart.data.labels.push(timestamp);
+        
+        // Update each dataset
+        dataMapping.forEach(({ key, dataset }) => {
+            const value = this.sensorData[key]?.value || null;
+            chart.data.datasets[dataset].data.push(value);
+        });
+        
+        // Keep only last N points
+        if (chart.data.labels.length > this.maxHistoryPoints) {
+            chart.data.labels.shift();
+            chart.data.datasets.forEach(dataset => {
+                dataset.data.shift();
+            });
+        }
+        
+        chart.update('none'); // No animation for real-time updates
+    }
+    
+    updateDataTable() {
+        const tbody = document.getElementById('data-table-body');
+        tbody.innerHTML = '';
+        
+        Object.entries(this.sensorData).forEach(([name, data]) => {
+            const status = this.getSensorStatus(name, data.value);
+            const range = this.getSensorRange(name);
+            const trend = this.getSensorTrend(name, data.value);
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${data.name || name}</td>
+                <td class="fw-bold text-primary">${this.formatValue(data.value)}</td>
+                <td>${data.unit}</td>
+                <td class="text-muted">${range}</td>
+                <td><span class="badge ${status.class}">${status.text}</span></td>
+                <td><span class="badge ${trend.class}">${trend.text}</span></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    
+    getSensorStatus(name, value) {
+        // Define normal ranges for common sensors
+        const ranges = {
+            'RPM': { min: 700, max: 900, unit: 'rpm' },
+            'COOLANT_TEMP': { min: 80, max: 95, unit: '°C' },
+            'ENGINE_LOAD': { min: 15, max: 30, unit: '%' },
+            'THROTTLE_POS': { min: 15, max: 25, unit: '%' }
+        };
+        
+        const range = ranges[name];
+        if (!range) return { class: 'bg-secondary', text: 'Unknown' };
+        
+        if (value < range.min || value > range.max) {
+            return { class: 'bg-warning', text: 'Abnormal' };
+        }
+        return { class: 'bg-success', text: 'Normal' };
+    }
+    
+    getSensorRange(name) {
+        const ranges = {
+            'RPM': '700-900 rpm',
+            'COOLANT_TEMP': '80-95°C',
+            'ENGINE_LOAD': '15-30%',
+            'THROTTLE_POS': '15-25%',
+            'SHORT_FUEL_TRIM_1': '-5 to +5%',
+            'LONG_FUEL_TRIM_1': '-3 to +3%'
+        };
+        
+        return ranges[name] || 'Varies';
+    }
+    
+    getSensorTrend(name, currentValue) {
+        if (!this.sensorHistory[name]) {
+            this.sensorHistory[name] = [];
+        }
+        
+        this.sensorHistory[name].push(currentValue);
+        if (this.sensorHistory[name].length > 5) {
+            this.sensorHistory[name].shift();
+        }
+        
+        if (this.sensorHistory[name].length < 2) {
+            return { class: 'bg-secondary', text: '—' };
+        }
+        
+        const recent = this.sensorHistory[name].slice(-3);
+        const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+        const diff = currentValue - avg;
+        
+        if (Math.abs(diff) < 1) return { class: 'bg-secondary', text: 'Stable' };
+        if (diff > 0) return { class: 'bg-primary', text: '↗ Rising' };
+        return { class: 'bg-info', text: '↘ Falling' };
+    }
+    
+    formatValue(value) {
+        return typeof value === 'number' ? value.toFixed(1) : '—';
+    }
+    
+    updateTimestamp(timestamp) {
+        const date = new Date(timestamp || Date.now());
+        document.getElementById('last-refresh').textContent = date.toLocaleTimeString();
+    }
+    
+    showError(message) {
+        const errorElement = document.getElementById('data-error');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+    
+    resetCharts() {
+        Object.values(this.charts).forEach(chart => {
+            chart.data.labels = [];
+            chart.data.datasets.forEach(dataset => {
+                dataset.data = [];
+            });
+            chart.update();
+        });
+        this.sensorHistory = {};
+    }
+    
+    recordDataPoint() {
+        this.recordedData.push({
+            timestamp: new Date().toISOString(),
+            data: { ...this.sensorData }
+        });
+        
+        // Keep only last 1000 data points
+        if (this.recordedData.length > 1000) {
+            this.recordedData.shift();
+        }
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    new LiveDataMonitor();
+});
+</script>
+{% endblock %}
